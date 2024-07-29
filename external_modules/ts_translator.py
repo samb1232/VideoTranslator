@@ -13,8 +13,6 @@ from deep_translator import (GoogleTranslator,
                              DeeplTranslator,
                              QcriTranslator)
 
-import config
-
 TRANSLATION_LIMIT = 5000
 
 
@@ -104,31 +102,31 @@ class TranslateSubtitle:
         if self.translator == 'google':
             translator = GoogleTranslator(source=self.source_lang, target=self.target_lang)
 
-        if self.translator == 'chatgpt':
+        elif self.translator == 'chatgpt':
             translator = ChatGptTranslator(source=self.source_lang, target=self.target_lang)
 
-        if self.translator == 'microsoft':
+        elif self.translator == 'microsoft':
             translator = MicrosoftTranslator(source=self.source_lang, target=self.target_lang)
 
-        if self.translator == 'pons':
+        elif self.translator == 'pons':
             translator = PonsTranslator(source=self.source_lang, target=self.target_lang)
 
-        if self.translator == 'linguee':
+        elif self.translator == 'linguee':
             translator = LingueeTranslator(source=self.source_lang, target=self.target_lang)
 
-        if self.translator == 'mymemory':
+        elif self.translator == 'mymemory':
             translator = MyMemoryTranslator(source=self.source_lang, target=self.target_lang)
 
-        if self.translator == 'yandex':
+        elif self.translator == 'yandex':
             translator = YandexTranslator(source=self.source_lang, target=self.target_lang)
 
-        if self.translator == 'papago':
+        elif self.translator == 'papago':
             translator = PapagoTranslator(source=self.source_lang, target=self.target_lang)
 
-        if self.translator == 'deepl':
+        elif self.translator == 'deepl':
             translator = DeeplTranslator(source=self.source_lang, target=self.target_lang)
 
-        if self.translator == 'qcri':
+        elif self.translator == 'qcri':
             translator = QcriTranslator(source=self.source_lang, target=self.target_lang)
 
         number_of_translatable_content = len(content_list)
@@ -136,10 +134,9 @@ class TranslateSubtitle:
         for c in range(number_of_translatable_content):
             lines = []
             # some SRTs such as created by whisper doesn't have \r\n but some other have it
-            if "\r\n" in content_list[c]:
-                lines = content_list[c].split("\r\n")
-            if "\n" in content_list[c]:
-                lines = content_list[c].split("\n")
+
+            lines = content_list[c].split("\n")
+            assert len(lines) == 3 or len(lines) == 1
 
             time_info = ''
             text_info = ''
@@ -148,20 +145,22 @@ class TranslateSubtitle:
                     time_info += lines[i] + "\r\n"
                     continue
                 else:
-                    text_info += lines[i] + "\n"
+                    text_info += lines[i] + " (EOL)\n"
 
                     # list doesn't have the value at number_of_translatable_content index
             if len(text_translatable) + len(text_info) > TRANSLATION_LIMIT or c == number_of_translatable_content - 1:
                 try:
-                    translated_sub = translator.translate(text_translatable)
+                    translated_sub = translator.translate(text_translatable).replace(" (EOL)", "")
+                    temp_translated = translated_sub.replace("\n\n", "\n").replace("\n", "\n\n\r")
 
-                    temp_translated = translated_sub.split("\n\r")
+                    temp_translated = temp_translated.split("\n\r")
                     temp_translated[-1] = temp_translated[-1] + "\n"
                     contents += temp_translated
                 except TypeError as err:
                     print(err)
 
                 text_translatable = text_info
+                durations.append(time_info)
                 time.sleep(5)
             else:
                 durations.append(time_info)
