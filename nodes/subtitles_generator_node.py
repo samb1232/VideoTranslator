@@ -3,6 +3,8 @@ from pathlib import Path
 from config import AAI_API_KEY
 import assemblyai as aai
 
+from external_modules import sub_parser
+
 
 class VoceToSubtitlesNode:
     """Module for generating subtitles on original language"""
@@ -19,6 +21,9 @@ class VoceToSubtitlesNode:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         subtitles = transcript.export_subtitles_srt()
+
+        subtitles = sub_parser.correct_subtitles_length(subtitles)
+
         with open(out_file_path, "w") as srt_file:
             srt_file.write(subtitles)
 

@@ -4,7 +4,7 @@ from pydub import AudioSegment
 from speechkit import model_repository, configure_credentials, creds
 
 from config import YA_SPEECHKIT_API_KEY
-from external_modules.sub_parser import parse_srt_to_arr
+from external_modules.sub_parser import parse_srt_to_arr_from_file
 
 
 class VoicesFemale:
@@ -75,15 +75,9 @@ class SpeechGeneratorNode:
         final_audio.export(output_file_name, format="wav")
 
     def synthesise_full_audio(self, path_to_srt_subs: str, output_file_path: str):
-        subtitles_arr = parse_srt_to_arr(path_to_srt_subs)
+        subtitles_arr = parse_srt_to_arr_from_file(path_to_srt_subs)
         for subtitle in subtitles_arr:
             self._synthesize(subtitle.text, f"{self.TEMP_OUT_FOLDER_NAME}/{subtitle.number}.wav")
 
         self._merge_audios(subtitles_arr, output_file_path)
-
-
-if __name__ == "__main__":
-    sg_node = SpeechGeneratorNode(15, VoicesFemale.omazh)
-    sg_node._synthesize("",
-                        "test_aaudio.wav")
     
