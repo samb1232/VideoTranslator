@@ -13,7 +13,7 @@ from deep_translator import (GoogleTranslator,
                              DeeplTranslator,
                              QcriTranslator)
 
-TRANSLATION_LIMIT = 5000
+TRANSLATION_LIMIT = 4500
 
 
 class Translators:
@@ -56,7 +56,7 @@ class TranslateSubtitle:
             os.makedirs(self.out_dir)
             print(f"Translation folder created at: {self.out_dir}")
 
-        name_sep = f'{self.source_lang}-to-{self.target_lang}-{self.translator}'
+        name_sep = f'translated-{self.target_lang}-{self.translator}'
 
         # index number of last dot
         last_dot = file_name.rfind('.')
@@ -71,7 +71,7 @@ class TranslateSubtitle:
             new_file_name = self.out_dir + '/' + base_name + "-" + str(name_sep) + ext
         return new_file_name
 
-    def subtitle_translator(self, input_file_path):
+    def translate_src_file(self, input_file_path):
         """
         this function translate a subtitle file from original language to desired language
         
