@@ -49,7 +49,7 @@ class TranslateSubtitle:
             return lines.split("\n\n")
 
     def format_file_name(self, file_name):
-        file_name = file_name.split("/")[-1]
+        file_name = file_name.split("/")[-1].split("\\")[-1]
         # Check if the directory already exists
         if not os.path.exists(self.out_dir):
             # If it doesn't exist, create the directory
@@ -145,12 +145,12 @@ class TranslateSubtitle:
                     time_info += lines[i] + "\r\n"
                     continue
                 else:
-                    text_info += lines[i] + " (EOL)\n"
+                    text_info += lines[i] + " (КОФ)\n"
 
                     # list doesn't have the value at number_of_translatable_content index
             if len(text_translatable) + len(text_info) > TRANSLATION_LIMIT or c == number_of_translatable_content - 1:
                 try:
-                    translated_sub = translator.translate(text_translatable).replace(" (EOL)", "")
+                    translated_sub = translator.translate(text_translatable).replace(" (КОФ)", "")
                     temp_translated = translated_sub.replace("\n\n", "\n").replace("\n", "\n\n\r")
 
                     temp_translated = temp_translated.split("\n\r")
