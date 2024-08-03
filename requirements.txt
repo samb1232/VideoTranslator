@@ -1,4 +1,7 @@
 assemblyai
 deep-translator
-pydub
+librosa
+soundfile
+pyrubberband
 yandex-speechkit
+pysndfx

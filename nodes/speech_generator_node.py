@@ -1,6 +1,12 @@
 import os
 
+import librosa
+import soundfile as sf
+import pysndfx
+from pysndfx import AudioEffectsChain
+
 from pydub import AudioSegment
+
 from speechkit import model_repository, configure_credentials, creds
 
 from config import YA_SPEECHKIT_API_KEY
@@ -32,8 +38,9 @@ class SpeechGeneratorNode:
     """Module for synthesising subtitle to voice"""
 
     TEMP_OUT_FOLDER_NAME = "temp_out"
+    ADJUSTED_OUT_FOLDER_NAME = "adjusted"
 
-    def __init__(self, full_video_length: float, model_voice: str, model_role: str = "neutral",
+    def __init__(self, model_voice: str, model_role: str = "neutral",
                  model_speed: float = 1.0):
         configure_credentials(
             yandex_credentials=creds.YandexCredentials(
@@ -44,40 +51,73 @@ class SpeechGeneratorNode:
         self.model.voice = model_voice
         self.model.role = model_role
         self.model.speed = model_speed
-        self.full_video_length = full_video_length
 
-    def _synthesize(self, text_to_speak: str, export_file_path: str):
+        self.sr_sum = 0
+        self.sr_count = 0
+
+    def _synthesize(self, text_to_speak: str, export_filename: str):
         result = self.model.synthesize(text_to_speak, raw_format=False)
-        result.export(export_file_path, 'wav')
+        result.export(f"{self.TEMP_OUT_FOLDER_NAME}/{export_filename}", 'wav')
 
-    @staticmethod
-    def _change_audio_speed(audio_segment, target_duration):
+    # @staticmethod
+    # def _adjust_audio_speed(audio_path, target_duration, output_path):
+    #     y, sr = librosa.load(audio_path, sr=None)
+    #     current_duration = librosa.get_duration(y=y, sr=sr)
+    #     speed_ratio = current_duration / target_duration
+    #     y_stretched = librosa.effects.time_stretch(y, rate=speed_ratio)
+    #     sf.write(output_path, y_stretched, sr)
+
+    # @staticmethod
+    # def _adjust_audio_speed(audio_path, target_duration, output_path):
+    #     y, sr = sf.read(audio_path)
+    #     current_duration = len(y) / sr
+    #     speed_ratio = current_duration / target_duration
+    #     fx = AudioEffectsChain().speed(speed_ratio)
+    #     y_changed = fx(y)
+    #     sf.write(output_path, y_changed, sr)
+
+    def _adjust_audio_speed(self, audio_path, target_duration, output_path):
+        audio_segment = AudioSegment.from_wav(audio_path)
         current_duration = len(audio_segment)
-        speed_ratio = target_duration / current_duration
-        return audio_segment.speedup(playback_speed=1 / speed_ratio)
+        speed_ratio = current_duration / (target_duration * 1000)
 
-    def _merge_audios(self, subtitles, output_file_name):
-        final_audio = AudioSegment.silent(duration=self.full_video_length)
+        self.sr_sum += speed_ratio
+        self.sr_count += 1
+
+        if speed_ratio > 1.05:
+            new_audio = audio_segment.speedup(playback_speed=speed_ratio)
+        else:
+            new_audio = audio_segment
+        new_audio.export(output_path, format="wav")
+
+
+    def _merge_audios(self, full_audio_length, subtitles, output_file_name):
+
+        final_audio = AudioSegment.silent(duration=full_audio_length)
 
         for subtitle in subtitles:
-            audio_file = f"{self.TEMP_OUT_FOLDER_NAME}/{subtitle.number}.wav"
+            audio_file = f"{self.ADJUSTED_OUT_FOLDER_NAME}/adj_{subtitle.number}.wav"
             if not os.path.exists(audio_file):
                 continue
 
             audio_segment = AudioSegment.from_wav(audio_file)
-            target_duration = int(subtitle.duration.total_seconds() * 1000)  # pydub works in milliseconds
-            adjusted_audio = self._change_audio_speed(audio_segment, target_duration)
             start_time_ms = int(
                 subtitle.start_time.hour * 3600000 + subtitle.start_time.minute * 60000 + subtitle.start_time.second * 1000 + subtitle.start_time.microsecond // 1000)
 
-            final_audio = final_audio.overlay(adjusted_audio, position=start_time_ms)
+            final_audio = final_audio.overlay(audio_segment, position=start_time_ms)
 
         final_audio.export(output_file_name, format="wav")
 
-    def synthesise_full_audio(self, path_to_srt_subs: str, output_file_path: str):
+    def synthesise_full_audio(self, src_audio_path: str, path_to_srt_subs: str, output_file_path: str):
         subtitles_arr = parse_srt_to_arr_from_file(path_to_srt_subs)
+        audio = AudioSegment.from_file(src_audio_path)
+        final_audio_len = len(audio)
         for subtitle in subtitles_arr:
-            self._synthesize(subtitle.text, f"{self.TEMP_OUT_FOLDER_NAME}/{subtitle.number}.wav")
-
-        self._merge_audios(subtitles_arr, output_file_path)
+            self._synthesize(subtitle.text, f"{subtitle.number}.wav")
+            self._adjust_audio_speed(f"{self.TEMP_OUT_FOLDER_NAME}/{subtitle.number}.wav", 
+                                     subtitle.duration, 
+                                     f"{self.ADJUSTED_OUT_FOLDER_NAME}/adj_{subtitle.number}.wav")
+        
+        self._merge_audios(final_audio_len, subtitles_arr, output_file_path)
+        print("Avg speed_adjustment:", self.sr_sum/self.sr_count)
     

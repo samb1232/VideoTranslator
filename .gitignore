@@ -188,5 +188,6 @@ fabric.properties
 .trash
 *.mp4
 *.m4a
+*.mp3
 
 config.py

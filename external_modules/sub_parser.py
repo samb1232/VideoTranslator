@@ -33,7 +33,8 @@ def parse_srt_to_arr(subtitles_str: str):
         start_time_str, end_time_str = time_match.groups()
         start_time = datetime.strptime(start_time_str, '%H:%M:%S,%f')
         end_time = datetime.strptime(end_time_str, '%H:%M:%S,%f')
-        duration = end_time - start_time
+        duration_td = end_time - start_time
+        duration = duration_td.total_seconds()
 
         text = []
         i += 2
@@ -76,7 +77,11 @@ def correct_subtitles_length(subtitles: str) -> str:
                 # Concat subtitles
                 new_start_time = current_sub.start_time
                 new_end_time = next_sub.end_time
-                new_duration = new_end_time - new_start_time
+                new_duration_td = new_end_time - new_start_time
+                new_duration = new_duration_td.total_seconds()
+
+
+
                 new_text = current_sub.text + ' ' + next_sub.text
                 index += 1
                 new_subtitle = Subtitle(index, new_start_time, new_end_time, new_duration, new_text)
