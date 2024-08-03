@@ -3,5 +3,7 @@ deep-translator
 librosa
 soundfile
 pyrubberband
+pydub
 yandex-speechkit
 pysndfx
+moviepy
