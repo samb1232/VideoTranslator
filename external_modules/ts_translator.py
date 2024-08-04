@@ -13,7 +13,13 @@ from deep_translator import (GoogleTranslator,
                              DeeplTranslator,
                              QcriTranslator)
 
-TRANSLATION_LIMIT = 4500
+from external_modules.my_yandex_translator import MyYandexTranslator
+
+from external_modules import sub_parser
+
+from external_modules.sub_parser import Subtitle
+import config
+
 
 
 class Translators:
@@ -30,23 +36,14 @@ class Translators:
 
 
 class TranslateSubtitle:
+    TRANSLATION_LIMIT = 5000
+    END_LINE_KEYPHRASE = " (END)"
+
     def __init__(self, out_dir, translator, source_lang, target_lang) -> None:
         self.out_dir = out_dir
         self.translator = translator
         self.source_lang = source_lang
         self.target_lang = target_lang
-
-    @staticmethod
-    def read_file_as_list(file_name):
-        fr = codecs.open(file_name, "r", encoding='utf-8-sig')
-        lines = fr.read()
-        fr.close()
-
-        # some SRTs such as created by whisper doesn't have \r\n but some other have it
-        if "\r\n" in lines:
-            return lines.split("\r\n\r\n")
-        if "\n\n" in lines:
-            return lines.split("\n\n")
 
     def format_file_name(self, file_name):
         file_name = file_name.split("/")[-1].split("\\")[-1]
@@ -73,30 +70,8 @@ class TranslateSubtitle:
 
     def translate_src_file(self, input_file_path):
         """
-        this function translate a subtitle file from original language to desired language
-        
-        line may be the order number of the subtitle or just for real line 
-        such as answer to age given "33" or there is no order number but "-->"   
-        must be present to in the middle of the start and end time of subtitle
-        to be shown. There must an empty line between two ordered subtitle.
-        Expected /standard subtitle should be like this:
-            1
-            00:00:27,987 --> 00:00:29,374
-            - Babe.
-            - Mmm.
-            
-            2
-            00:00:30,210 --> 00:00:31,634
-            - Lizzie.
-            - Mmm.
-            
-            3
+        Translate a subtitle file from original language to desired language
         """
-
-        content_list = self.read_file_as_list(input_file_path)
-        durations = []
-        contents = []
-        text_translatable = ''
 
         translator = None
         if self.translator == 'google':
@@ -118,7 +93,12 @@ class TranslateSubtitle:
             translator = MyMemoryTranslator(source=self.source_lang, target=self.target_lang)
 
         elif self.translator == 'yandex':
-            translator = YandexTranslator(source=self.source_lang, target=self.target_lang)
+            translator = MyYandexTranslator(
+                api_key=config.YA_TRANSLATE_API_KEY, 
+                folder_id=config.YA_TRANSLATE_FOLDER_ID,
+                src_lang=self.source_lang,
+                dest_lang=self.target_lang
+                )
 
         elif self.translator == 'papago':
             translator = PapagoTranslator(source=self.source_lang, target=self.target_lang)
@@ -129,48 +109,56 @@ class TranslateSubtitle:
         elif self.translator == 'qcri':
             translator = QcriTranslator(source=self.source_lang, target=self.target_lang)
 
-        number_of_translatable_content = len(content_list)
+        text_translatable = ""
 
-        for c in range(number_of_translatable_content):
-            lines = []
-            # some SRTs such as created by whisper doesn't have \r\n but some other have it
+        subs_arr = sub_parser.parse_srt_to_arr_from_file(input_file_path)
+        subs_translated_arr = []
+        translated_subs_counter = 0
 
-            lines = content_list[c].split("\n")
-            assert len(lines) == 3 or len(lines) == 1
-
-            time_info = ''
-            text_info = ''
-            for i in range(len(lines)):
-                if i < len(lines) - 1 and lines[i].rstrip().isdigit() and "-->" in lines[i + 1] or "-->" in lines[i]:
-                    time_info += lines[i] + "\r\n"
-                    continue
-                else:
-                    text_info += lines[i] + " (КОФ)\n"
-
-                    # list doesn't have the value at number_of_translatable_content index
-            if len(text_translatable) + len(text_info) > TRANSLATION_LIMIT or c == number_of_translatable_content - 1:
-                try:
-                    translated_sub = translator.translate(text_translatable).replace(" (КОФ)", "")
-                    temp_translated = translated_sub.replace("\n\n", "\n").replace("\n", "\n\n\r")
-
-                    temp_translated = temp_translated.split("\n\r")
-                    temp_translated[-1] = temp_translated[-1] + "\n"
-                    contents += temp_translated
-                except TypeError as err:
-                    print(err)
-
-                text_translatable = text_info
-                durations.append(time_info)
-                time.sleep(5)
+        for sub_index in range(len(subs_arr) + 1):
+            is_last = sub_index == len(subs_arr)
+            if not is_last:
+                sub_text = subs_arr[sub_index].text
             else:
-                durations.append(time_info)
-                text_translatable += text_info + "\n\r"
+                sub_text = ""
+            
+            if (len(text_translatable) + len(sub_text) + len(self.END_LINE_KEYPHRASE) * 60 >= self.TRANSLATION_LIMIT) or (
+                is_last and len(text_translatable) > 0):
+                translated_text = translator.translate(text_translatable).replace(self.END_LINE_KEYPHRASE, "")
+                translated_arr = self._parse_text_to_arr(translated_text)
 
-        with open(self.format_file_name(input_file_path), 'w', encoding='utf-8') as out_file:
-            for d, c in zip(durations, contents):
-                out_file.write(d.replace('\r\r', ''))
-                out_file.write(c + "\n")
-                # print(d + c)
+                translated_arr_correct_len = sub_index - translated_subs_counter
+                if len(translated_arr) != translated_arr_correct_len:
+                    print(f"WARNING: incorrect translation: translated_arr len is {len(translated_arr)}, but should be {translated_arr_correct_len}")
+
+                for i in range(len(translated_arr)):
+                    old_sub = subs_arr[translated_subs_counter + i]
+                    new_sub = Subtitle(
+                        number=old_sub.number,
+                        start_time=old_sub.start_time,
+                        end_time=old_sub.end_time,
+                        duration=old_sub.duration,
+                        text=translated_arr[i]
+                    )
+                    subs_translated_arr.append(new_sub)
+                
+                text_translatable = ""
+                translated_subs_counter = sub_index
+                if not is_last: 
+                    time.sleep(5)
+            
+            text_translatable += sub_text + self.END_LINE_KEYPHRASE + "\n\n"
+
+        
+
+        output_file_path = self.format_file_name(input_file_path)
+        
+        sub_parser.write_subs_arr_to_srt_file(subs_translated_arr, output_file_path)
 
         print("Done!")
-        print("New file name: ", self.format_file_name(input_file_path))
+        print("New file name: ", output_file_path)
+
+    @staticmethod
+    def _parse_text_to_arr(text: str):
+        final_arr = text.split("\n\n")
+        return final_arr[:-1]

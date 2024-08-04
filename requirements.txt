@@ -7,3 +7,5 @@ pydub
 yandex-speechkit
 pysndfx
 moviepy
+yandex-translate
+

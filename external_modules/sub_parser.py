@@ -95,11 +95,57 @@ def correct_subtitles_length(subtitles: str) -> str:
         new_subs_arr.append(new_subtitle)
         i += 1
 
+    new_subs_arr = fix_subtitles_sentenses(new_subs_arr)
+
     # Преобразуем новый массив субтитров обратно в строку формата SRT
+    srt_output = convert_subs_arr_to_str(new_subs_arr)
+
+    return srt_output
+
+
+
+def fix_subtitles_sentenses(subtitles):
+    for i in range(1, len(subtitles)-1):
+        current_text = subtitles[i].text
+        previous_text = subtitles[i-1].text
+
+        # Checking if there are sentence fragments in the current subtitle
+        if re.search(r'[.!?]', current_text):
+            sentences = re.split(r'([.!?])', current_text)
+            # Concat sentences and punctuation
+            last_sentence = sentences[-1]
+            sentences = [sentences[i] + sentences[i+1] for i in range(0, len(sentences)-1, 2)]
+            if len(last_sentence) > 1:
+                sentences.append(last_sentence)
+
+            if len(sentences) > 1 and len(sentences[0].split()) < 4 and not re.search(r'[.!?]$', previous_text):
+                # Move the first sentence to the previous subtitle
+                subtitles[i-1].text = previous_text + ' ' + sentences[0]
+                subtitles[i].text = ' '.join(sentences[1:])
+
+        # # Checking if there are sentence fragments in the previous subtitle
+        # if re.search(r'[.!?]', previous_text):
+        #     sentences = re.split(r'([.!?])', previous_text)
+        #     # Concat sentences and punctuation
+        #     sentences = [sentences[i] + sentences[i+1] for i in range(0, len(sentences)-1, 2)]
+
+        #     if len(sentences) > 1 and len(sentences[-1].split()) < 3:
+        #         # Move the last sentence to the current subtitle
+        #         subtitles[i-1].text = ' '.join(sentences[:-1])
+        #         subtitles[i].text = sentences[-1] + ' ' + current_text
+
+    return subtitles
+
+def convert_subs_arr_to_str(subs_arr: list):
     srt_output = ""
-    for sub in new_subs_arr:
+    for sub in subs_arr:
         srt_output += f"{sub.number}\n"
         srt_output += f"{sub.start_time.strftime('%H:%M:%S,%f')[:-3]} --> {sub.end_time.strftime('%H:%M:%S,%f')[:-3]}\n"
         srt_output += f"{sub.text}\n\n"
-
     return srt_output
+    
+
+def write_subs_arr_to_srt_file(subs_arr: list, output_file_path: str):
+    str_output = convert_subs_arr_to_str(subs_arr)
+    with open(output_file_path, "w", encoding="utf-8") as f_out:
+        f_out.write(str_output)
