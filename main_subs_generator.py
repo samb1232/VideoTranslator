@@ -1,5 +1,5 @@
 from nodes.subtitles_generator_node import VoceToSubtitlesNode
 
-voice_node = VoceToSubtitlesNode("en")
-for i in range(2, 11):
-    voice_node.transcript(f"materials/{i}_audio.mp3", f"materials/{i}_subs_eng.srt")
+voice_node = VoceToSubtitlesNode("ru")
+
+voice_node.transcript("test_files\\4_tehnik\\tehnik_vid.mp4", "test_files\\4_tehnik\\tehnik_subs.srt")

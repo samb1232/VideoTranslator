@@ -18,9 +18,16 @@ class VoceToSubtitlesNode:
         temp_path = video_file_name.split(".")[-2]
         if len(temp_path) < 2:
             temp_path = video_file_name
-        audio_file_path = f"audio_{temp_path}.wav"
+
+        out_folder_path = video_file_path.replace(video_file_name, "")
+        if len(out_folder_path) != 0:
+            audio_file_path = f"{out_folder_path}\\audio_{temp_path}.wav"
+        else:
+            audio_file_path = f"audio_{temp_path}.wav"
+
         extract_audio_from_video(video_file_path, audio_file_path)
-        transcript = aai.Transcriber().transcribe(audio_file_path, self.aai_conf)
+        
+        transcript = aai.Transcriber().transcribe(video_file_path, self.aai_conf)
 
         # Ensure the output directory exists
         output_dir = Path(out_file_path).parent
@@ -30,6 +37,6 @@ class VoceToSubtitlesNode:
 
         subtitles = sub_parser.correct_subtitles_length(subtitles)
 
-        with open(out_file_path, "w") as srt_file:
+        with open(out_file_path, "w", encoding="utf-8") as srt_file:
             srt_file.write(subtitles)
 
