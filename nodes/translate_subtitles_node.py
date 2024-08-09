@@ -3,11 +3,13 @@ from external_modules.ts_translator import TranslateSubtitle, Translators
 
 class TranslateSubtitlesNode:
     def __init__(self,
-                 translator_type: Translators = Translators.google,
-                 out_dir_name: str = "translation_results") -> None:
+                 translator_type: Translators,
+                 out_dir_name: str, 
+                 subs_sep: str) -> None:
         self.translator_type = translator_type
         self.out_dir_name = out_dir_name
+        self.subs_sep = subs_sep
 
     def translate_srt(self, input_src_file_path: str, src_lang: str, target_lang: str):
-        ts = TranslateSubtitle(self.out_dir_name, self.translator_type, src_lang, target_lang)
+        ts = TranslateSubtitle(self.out_dir_name, self.translator_type, src_lang, target_lang, self.subs_sep)
         ts.translate_src_file(input_src_file_path)

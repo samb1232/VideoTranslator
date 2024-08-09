@@ -37,13 +37,13 @@ class Translators:
 
 class TranslateSubtitle:
     TRANSLATION_LIMIT = 5000
-    END_LINE_KEYPHRASE = " (END)"
 
-    def __init__(self, out_dir, translator, source_lang, target_lang) -> None:
+    def __init__(self, out_dir, translator, source_lang, target_lang, end_line_separator) -> None:
         self.out_dir = out_dir
         self.translator = translator
         self.source_lang = source_lang
         self.target_lang = target_lang
+        self.end_line_separator = end_line_separator
 
     def format_file_name(self, file_name):
         file_name = file_name.split("/")[-1].split("\\")[-1]
@@ -122,9 +122,9 @@ class TranslateSubtitle:
             else:
                 sub_text = ""
             
-            if (len(text_translatable) + len(sub_text) + len(self.END_LINE_KEYPHRASE) * 60 >= self.TRANSLATION_LIMIT) or (
+            if (len(text_translatable) + len(sub_text) + len(self.end_line_separator) * 60 >= self.TRANSLATION_LIMIT) or (
                 is_last and len(text_translatable) > 0):
-                translated_text = translator.translate(text_translatable).replace(self.END_LINE_KEYPHRASE, "")
+                translated_text = translator.translate(text_translatable).replace(self.end_line_separator, "")
                 translated_arr = self._parse_text_to_arr(translated_text)
 
                 translated_arr_correct_len = sub_index - translated_subs_counter
@@ -147,7 +147,7 @@ class TranslateSubtitle:
                 if not is_last: 
                     time.sleep(5)
             
-            text_translatable += sub_text + self.END_LINE_KEYPHRASE + "\n\n"
+            text_translatable += sub_text + self.end_line_separator + "\n\n"
 
         
 
