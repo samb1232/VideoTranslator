@@ -34,14 +34,15 @@ class VoicesMale:
     anton: str = "anton"
 
 
-class SpeechGeneratorNode:
+class SpeechGeneratorYandexNode:
     """Module for synthesising subtitle to voice"""
 
     TEMP_OUT_FOLDER_NAME = "temp_out"
-    ADJUSTED_OUT_FOLDER_NAME = "adjusted"
 
-    def __init__(self, model_voice: str, model_role: str = "neutral",
-                 model_speed: float = 1.0):
+    def __init__(self, model_voice: str, model_role: str = "neutral"):
+        if not os.path.exists(self.TEMP_OUT_FOLDER_NAME):
+            os.makedirs(self.TEMP_OUT_FOLDER_NAME)
+
         configure_credentials(
             yandex_credentials=creds.YandexCredentials(
                 api_key=YA_SPEECHKIT_API_KEY
@@ -49,14 +50,29 @@ class SpeechGeneratorNode:
         )
         self.model = model_repository.synthesis_model()
         self.model.voice = model_voice
-        self.model.role = model_role
-        self.model.speed = model_speed
+        if model_role != "":
+            self.model.role = model_role
 
         self.sr_sum = 0
         self.sr_count = 0
 
-    def _synthesize(self, text_to_speak: str, export_filename: str):
+    def _synthesize_and_adjust(self, text_to_speak: str, target_duration: float, export_filename: str):
+        self.model.speed = 1.0
         result = self.model.synthesize(text_to_speak, raw_format=False)
+        current_duration = len(result)
+        speed_ratio = current_duration / (target_duration * 1000)
+
+        #Correct speed ratio in case of errors
+        if speed_ratio < 0.2:
+            speed_ratio = 1.0
+        elif speed_ratio > 2.9:
+            speed_ratio = 2.9
+
+        if abs(1-speed_ratio) > 0.1:
+            self.model.speed = speed_ratio
+            result = self.model.synthesize(text_to_speak, raw_format=False)
+
+
         result.export(f"{self.TEMP_OUT_FOLDER_NAME}/{export_filename}", 'wav')
 
     # @staticmethod
@@ -96,7 +112,7 @@ class SpeechGeneratorNode:
         final_audio = AudioSegment.silent(duration=full_audio_length)
 
         for subtitle in subtitles:
-            audio_file = f"{self.ADJUSTED_OUT_FOLDER_NAME}/adj_{subtitle.number}.wav"
+            audio_file = f"{self.TEMP_OUT_FOLDER_NAME}/{subtitle.number}.wav"
             if not os.path.exists(audio_file):
                 continue
 
@@ -112,12 +128,13 @@ class SpeechGeneratorNode:
         subtitles_arr = parse_srt_to_arr_from_file(path_to_srt_subs)
         audio = AudioSegment.from_file(src_audio_path)
         final_audio_len = len(audio)
+
         for subtitle in subtitles_arr:
-            self._synthesize(subtitle.text, f"{subtitle.number}.wav")
-            self._adjust_audio_speed(f"{self.TEMP_OUT_FOLDER_NAME}/{subtitle.number}.wav", 
-                                     subtitle.duration, 
-                                     f"{self.ADJUSTED_OUT_FOLDER_NAME}/adj_{subtitle.number}.wav")
+            self._synthesize_and_adjust(subtitle.text, subtitle.duration, f"{subtitle.number}.wav")
+            # self._adjust_audio_speed(f"{self.TEMP_OUT_FOLDER_NAME}/{subtitle.number}.wav", 
+            #                          subtitle.duration, 
+            #                          f"{self.ADJUSTED_OUT_FOLDER_NAME}/adj_{subtitle.number}.wav")
         
         self._merge_audios(final_audio_len, subtitles_arr, output_file_path)
-        print("Avg speed_adjustment:", self.sr_sum/self.sr_count)
+        # print("Avg speed_adjustment:", self.sr_sum/self.sr_count)
     

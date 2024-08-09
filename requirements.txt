@@ -8,4 +8,5 @@ yandex-speechkit
 pysndfx
 moviepy
 yandex-translate
-
+TTS
+audiostretchy
