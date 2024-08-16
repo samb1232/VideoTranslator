@@ -8,12 +8,14 @@ from external_modules.sub_parser import parse_srt_to_arr_from_file
 
 class SpeechGeneratorCustomNode:
     PATH_TO_MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"
+    # PATH_TO_MODEL = "tts_models/en/multi-dataset/tortoise-v2"
     TEMP_FOLDER_NAME = "temp"
     ADJ_FOLDER_NAME = TEMP_FOLDER_NAME + "/" + "adj"
-    def __init__(self, language: str, speaker_ex_voice_wav_file: str) -> None:
+
+    def __init__(self, language: str = None, speaker_ex_voice_wav_file: str = None) -> None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print("device:" + device)
-        self.tts = TTS(model_name=self.PATH_TO_MODEL, progress_bar=False).to(device)
+        self.tts = TTS(model_name=self.PATH_TO_MODEL).to(device)
         self.lang = language
         self.speaker_ex_voice_wav_file = speaker_ex_voice_wav_file
 
@@ -60,9 +62,12 @@ class SpeechGeneratorCustomNode:
         subtitles_arr = parse_srt_to_arr_from_file(path_to_srt_subs)
         audio = AudioSegment.from_file(src_audio_path)
         final_audio_len = len(audio)
-
+        cnt = 1
+        last = len(subtitles_arr)
         for subtitle in subtitles_arr:
-            # self._synthesize(subtitle.text, f"{self.TEMP_FOLDER_NAME}/{subtitle.number}.wav")
+            print(f"Progress: {cnt}/{last}")
+            cnt += 1
+            self._synthesize(subtitle.text, f"{self.TEMP_FOLDER_NAME}/{subtitle.number}.wav")
             self._adjust_audio_speed(f"{self.TEMP_FOLDER_NAME}/{subtitle.number}.wav", 
                                      f"{self.ADJ_FOLDER_NAME}/adj_{subtitle.number}.wav",
                                      subtitle.duration 

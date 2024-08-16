@@ -53,7 +53,7 @@ class TranslateSubtitle:
             os.makedirs(self.out_dir)
             print(f"Translation folder created at: {self.out_dir}")
 
-        name_sep = f'translated-{self.target_lang}-{self.translator}'
+        name_sep = f'_{self.target_lang}_{self.translator}'
 
         # index number of last dot
         last_dot = file_name.rfind('.')
@@ -65,7 +65,7 @@ class TranslateSubtitle:
         else:
             base_name = file_name[0: last_dot]
             ext = file_name[last_dot: len(file_name)]
-            new_file_name = self.out_dir + '/' + base_name + "-" + str(name_sep) + ext
+            new_file_name = self.out_dir + '/' + base_name + str(name_sep) + ext
         return new_file_name
 
     def translate_src_file(self, input_file_path):
