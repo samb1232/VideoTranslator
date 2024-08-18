@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#create_subs_form').on('submit', function (e) {
+                e.preventDefault();
+                $('#create_subs_button').prop('disabled', true);
+                $('#vid_processing_message').show();
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    success: function (response) {
+                        location.reload();
+                    }
+                });
+            });
+
+            $('#translate_subs_form').on('submit', function (e) {
+                e.preventDefault();
+                $('#translate_subs_button').prop('disabled', true);
+                $('#translation_processing_message').show();
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    success: function (response) {
+                        location.reload();
+                    }
+                });
+            });
+        });
+        
+    </script>
+</head>
+
+<body>
+    <h1>ExtFo Video Translator</h1>
+    <div class="extract_subs_div">
+        <h3>Extract subtitles from video</h3>
+        <p>Load the video mp4 file</p>
+        <form action="{{ url_for('upload_video') }}" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".mp4" required>
+            <input type="submit" value="Upload">
+        </form>
+        
+
+        {% if 'vid_filename' in session %}
+        <p>
+            Video file: {{session["vid_filename"]}}
+        </p>
+        <form id="create_subs_form" action="{{ url_for('create_subs') }}" method="post">
+            <label for="vid_src_lang">Source language code:</label>
+            <input type="text" id="vid_src_lang" name="vid_src_lang" value="{{ session.get('vid_src_lang', 'en') }}" required>
+            <input id="create_subs_button" type="submit" value="Create subs">
+        </form>
+        <div id="vid_processing_message" style="display: none;">Processing...</div>
+        {% endif %}
+
+        {% if 'subs_generated_filename' in session %}
+        <div class="subs_orig_lang_div">
+            <p>Subtitles created: {{session["subs_generated_filename"]}}. <a
+                    href="{{ url_for('download_file', filename=session['subs_filename']) }}">Download</a></p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="translate_subs_div">
+        <h3>Translate subtitles</h3>
+        <p>Load the subtitles srt file</p>
+        <form action="{{ url_for('upload_subs_for_translation') }}" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".srt" required>
+            <input type="submit" value="Upload">
+        </form>
+        
+        {% if 'subs_filename' in session %}
+        <p>
+            Subtitles file: {{session["subs_filename"]}}
+        </p>
+        <form id="translate_subs_form" action="{{ url_for('translate_subs') }}" method="post">
+            <label for="vid_src_lang">Source language code:</label>
+            <input type="text" id="trans_src_lang" name="trans_src_lang" value="{{ session.get('trans_src_lang', 'en') }}" required>
+            <label for="vid_src_lang">Target language code:</label>
+            <input type="text" id="trans_targ_lang" name="trans_targ_lang" value="{{ session.get('trans_targ_lang', 'ru') }}" required>
+            <input id="translate_subs_button" type="submit" value="Translate subs">
+        </form>
+        <div id="translation_processing_message" style="display: none;">Processing...</div>
+        {% endif %}
+
+        {% if 'trans_subs_filename' in session %}
+        <div class="subs_translated_div">
+            <p>Subtitles translated: {{session["trans_subs_filename"]}}. <a
+                    href="{{ url_for('download_file', filename=session['trans_subs_filename']) }}">Download</a></p>
+        </div>
+        {% endif %}
+    </div>
+
+
+
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+
+</html>

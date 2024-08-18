@@ -38,14 +38,13 @@ class Translators:
 class TranslateSubtitle:
     TRANSLATION_LIMIT = 5000
 
-    def __init__(self, out_dir, translator, source_lang, target_lang, end_line_separator) -> None:
-        self.out_dir = out_dir
+    def __init__(self, translator, source_lang, target_lang, end_line_separator) -> None:
         self.translator = translator
         self.source_lang = source_lang
         self.target_lang = target_lang
         self.end_line_separator = end_line_separator
 
-    def format_file_name(self, file_name):
+    def format_file_name(self, file_name): # REDUNDAND
         file_name = file_name.split("/")[-1].split("\\")[-1]
         # Check if the directory already exists
         if not os.path.exists(self.out_dir):
@@ -68,7 +67,7 @@ class TranslateSubtitle:
             new_file_name = self.out_dir + '/' + base_name + str(name_sep) + ext
         return new_file_name
 
-    def translate_src_file(self, input_file_path):
+    def translate_src_file(self, input_file_path, output_file_path):
         """
         Translate a subtitle file from original language to desired language
         """
@@ -150,13 +149,10 @@ class TranslateSubtitle:
             text_translatable += sub_text + self.end_line_separator + "\n\n"
 
         
-
-        output_file_path = self.format_file_name(input_file_path)
-        
         sub_parser.write_subs_arr_to_srt_file(subs_translated_arr, output_file_path)
 
         print("Done!")
-        print("New file name: ", output_file_path)
+        print("New file: ", output_file_path)
 
     @staticmethod
     def _parse_text_to_arr(text: str):

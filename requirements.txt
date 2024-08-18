@@ -10,3 +10,8 @@ moviepy
 yandex-translate
 TTS
 audiostretchy
+streamlit
+pytube
+
+Flask
+Flask-MySQLdb
