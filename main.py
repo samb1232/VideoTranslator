@@ -5,21 +5,22 @@ from nodes.speech_generator_custom_node import SpeechGeneratorCustomNode
 
 src_lang = "en"
 target_lang = "ru"
-folder_name = "test_files\\0015"
-video_file_name = "0015"
+folder_name = "test_files\\0016"
+video_file_name = "0016"
 
-voice = "trump"
+voice = "female_1"
 
 orig_subs_filename = f"{folder_name}\\{video_file_name}_subs_{src_lang}.srt"
+trans_subs_filename = f"{folder_name}\\{video_file_name}_subs_{src_lang}_{target_lang}.srt"
 
 voice_node = VoceToSubtitlesNode(src_lang)
 voice_node.transcript(f"{folder_name}\\{video_file_name}.mp4", orig_subs_filename)
 
 print("Subs extractions done!")
 
-translator_node = TranslateSubtitlesNode(Translators.yandex, folder_name, " //")
+translator_node = TranslateSubtitlesNode(Translators.yandex, " //")
 
-translator_node.translate_srt(orig_subs_filename, src_lang, target_lang)
+translator_node.translate_srt(orig_subs_filename, trans_subs_filename, src_lang, target_lang)
 
 print("Translation done!")
 
