@@ -26,8 +26,7 @@ print("Translation done!")
 
 sg_node = SpeechGeneratorCustomNode(language=target_lang, 
                                     speaker_ex_voice_wav_file=f"test_files\\voices_samples\\{voice}.wav")
-sg_node.synthesise_full_audio(src_audio_path=f"{folder_name}\\audio_{video_file_name}.wav", 
-                              path_to_srt_subs=f"{folder_name}\\{video_file_name}_subs_{src_lang}_{target_lang}_yandex.srt", 
+sg_node.synthesise_full_audio(path_to_srt_subs=f"{folder_name}\\{video_file_name}_subs_{src_lang}_{target_lang}_yandex.srt", 
                               output_file_path=f"{folder_name}\\{video_file_name}_{target_lang}.wav")
 print("Dub generation done!")
 

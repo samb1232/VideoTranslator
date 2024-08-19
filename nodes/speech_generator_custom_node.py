@@ -58,10 +58,10 @@ class SpeechGeneratorCustomNode:
 
         final_audio.export(output_file_name, format="wav")
 
-    def synthesise_full_audio(self, src_audio_path: str, path_to_srt_subs: str, output_file_path: str):
+    def synthesise_full_audio(self, path_to_srt_subs: str, output_file_path: str):
         subtitles_arr = parse_srt_to_arr_from_file(path_to_srt_subs)
-        audio = AudioSegment.from_file(src_audio_path)
-        final_audio_len = len(audio)
+        last_sub_end_time = subtitles_arr[-1].end_time
+        final_audio_len = last_sub_end_time.hour * 3600000 + last_sub_end_time.minute * 60000 + (last_sub_end_time.second + 1) * 1000
         cnt = 1
         last = len(subtitles_arr)
         for subtitle in subtitles_arr:
