@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, request, redirect, url_for, session, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 from flask_mysqldb import MySQL
 import web_app_func
 import os
@@ -17,17 +17,30 @@ app.config['MYSQL_CHARSET'] = 'utf8mb4'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS_VID'] = {'mp4'}
 app.config['ALLOWED_EXTENSIONS_SUBS'] = {"srt"}
+app.config['ALLOWED_EXTENSIONS_AUDIO'] = {"wav"}
 
 mysql = MySQL(app)
 
 # Секретный ключ для сессий
 app.secret_key = 'supersecretkey'
 
-def allowed_file_vid(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_VID']
+def allowed_file(filename, allowed_extensions):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
-def allowed_file_subs(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_SUBS']
+
+def upload_file(file, allowed_extensions, session_key):
+    if file and allowed_file(file.filename, allowed_extensions):
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
+        session[session_key] = file.filename
+        session[f'{session_key}_filepath'] = filepath
+        return True
+    else:
+        flash('Invalid file type')
+        return False
+
 
 @app.route('/')
 def home():
@@ -35,6 +48,7 @@ def home():
         return render_template('home.html')
     else:
         return redirect(url_for('login'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -59,6 +73,7 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
+
 @app.route('/upload_vid', methods=['POST'])
 def upload_video():
     if 'file' not in request.files:
@@ -68,14 +83,9 @@ def upload_video():
     if file.filename == '':
         flash('No selected file')
         return redirect(url_for('home'))
-    if file and allowed_file_vid(file.filename):
-        if not os.path.exists(app.config['UPLOAD_FOLDER']):
-            os.makedirs(app.config['UPLOAD_FOLDER'])
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-        session['vid_filename'] = file.filename
+    if upload_file(file, app.config['ALLOWED_EXTENSIONS_VID'], 'vid_filename'):
         return redirect(url_for('home'))
     else:
-        flash('Invalid file type')
         return redirect(url_for('home'))
 
 
@@ -88,17 +98,41 @@ def upload_subs_for_translation():
     if file.filename == '':
         flash('No selected file')
         return redirect(url_for('home'))
-    if file and allowed_file_subs(file.filename):
-        if not os.path.exists(app.config['UPLOAD_FOLDER']):
-            os.makedirs(app.config['UPLOAD_FOLDER'])
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-        session['subs_filename'] = file.filename
+    if upload_file(file, app.config['ALLOWED_EXTENSIONS_SUBS'], 'subs_filename'):
         return redirect(url_for('home'))
     else:
-        flash('Invalid file type')
+        return redirect(url_for('home'))
+
+ 
+@app.route('/upload_srt_for_voice_gen', methods=['POST'])
+def upload_subs_for_voice_generation():
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(url_for('home'))
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(url_for('home'))
+    if upload_file(file, app.config['ALLOWED_EXTENSIONS_SUBS'], 'subs_to_voice_gen_filename'):
+        return redirect(url_for('home'))
+    else:
         return redirect(url_for('home'))
     
-
+ 
+@app.route('/upload_speaker_example', methods=['POST'])
+def upload_speaker_example():
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(url_for('home'))
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(url_for('home'))
+    if upload_file(file, app.config['ALLOWED_EXTENSIONS_AUDIO'], 'speaker_example_filename'):
+        return redirect(url_for('home'))
+    else:
+        return redirect(url_for('home'))
+    
 
 @app.route('/create_subs', methods=['POST'])
 def create_subs():
@@ -148,10 +182,36 @@ def translate_subs():
         flash('No file uploaded')
         return redirect(url_for('home'))
 
+
+@app.route('/generate_voice', methods=['POST'])
+def generate_voice():
+    if 'subs_to_voice_gen_filename' in session and 'speaker_example_filename' in session:
+        
+        speaker_filepath = session['speaker_example_filepath']
+        subs_filepath = session['subs_to_voice_gen_filepath']
+
+        src_lang = request.form.get('voice_src_lang', 'en')
+        session['voice_src_lang'] = src_lang
+
+        subs_filename = session['subs_to_voice_gen_filename']
+        out_audio_filename = subs_filename.rsplit('.', 1)[0] + ".wav"
+        out_audio_filepath = os.path.join(app.config['UPLOAD_FOLDER'], out_audio_filename)
+        
+        web_app_func.generate_voice(src_lang=src_lang,
+                                    speaker_ex_filepath=speaker_filepath,
+                                    subs_filepath=subs_filepath,
+                                    out_filepath=out_audio_filepath)
+        session['generated_voice_filename'] = out_audio_filename
+        return redirect(url_for('home'))
+    else:
+        flash('No file uploaded')
+        return redirect(url_for('home'))
+
+
 @app.route('/download/<filename>')
 def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
