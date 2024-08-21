@@ -3,14 +3,15 @@ from pydub import AudioSegment
 import torch
 from TTS.api import TTS
 from audiostretchy.stretch import stretch_audio
+import shutil
+
 
 from external_modules.sub_parser import parse_srt_to_arr_from_file
 
 class SpeechGeneratorCustomNode:
     PATH_TO_MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"
     # PATH_TO_MODEL = "tts_models/en/multi-dataset/tortoise-v2"
-    TEMP_FOLDER_NAME = "temp"
-    ADJ_FOLDER_NAME = TEMP_FOLDER_NAME + "/" + "adj"
+    BASE_TEMP_FOLDER_NAME = "temp"
 
     def __init__(self, language: str = None, speaker_ex_voice_wav_file: str = None) -> None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -19,10 +20,9 @@ class SpeechGeneratorCustomNode:
         self.lang = language
         self.speaker_ex_voice_wav_file = speaker_ex_voice_wav_file
 
-        if not os.path.exists(self.TEMP_FOLDER_NAME):
-            os.makedirs(self.TEMP_FOLDER_NAME)
-        if not os.path.exists(self.ADJ_FOLDER_NAME):
-            os.makedirs(self.ADJ_FOLDER_NAME)
+        if not os.path.exists(self.BASE_TEMP_FOLDER_NAME):
+            os.makedirs(self.BASE_TEMP_FOLDER_NAME)
+       
 
     def _synthesize(self, text_to_speak: str, out_wav_file_path: str):
         self.tts.tts_to_file(text=text_to_speak, 
@@ -42,11 +42,14 @@ class SpeechGeneratorCustomNode:
         
         stretch_audio(input_audio_path, output_audio_path, ratio=speed_ratio)
 
-    def _merge_audios(self, full_audio_length, subtitles, output_file_name):
+    def _merge_audios(self, subtitles, output_file_name):
+        last_sub_end_time = subtitles[-1].end_time
+        full_audio_length = last_sub_end_time.hour * 3600000 + last_sub_end_time.minute * 60000 + (last_sub_end_time.second + 1) * 1000
+
         final_audio = AudioSegment.silent(duration=full_audio_length)
 
         for subtitle in subtitles:
-            audio_file = f"{self.ADJ_FOLDER_NAME}/adj_{subtitle.number}.wav"
+            audio_file = f"{self.path_to_temp_folder}/{subtitle.number}_adj.wav"
             if not os.path.exists(audio_file):
                 continue
 
@@ -59,18 +62,26 @@ class SpeechGeneratorCustomNode:
         final_audio.export(output_file_name, format="wav")
 
     def synthesise_full_audio(self, path_to_srt_subs: str, output_file_path: str):
+        temp_folder_name = "temp_for_" + os.path.split(path_to_srt_subs)[1].split(".")[-2]
+        self.path_to_temp_folder = os.path.join(self.BASE_TEMP_FOLDER_NAME, temp_folder_name)
+        if not os.path.exists(self.path_to_temp_folder):
+            os.makedirs(self.path_to_temp_folder)
+
         subtitles_arr = parse_srt_to_arr_from_file(path_to_srt_subs)
-        last_sub_end_time = subtitles_arr[-1].end_time
-        final_audio_len = last_sub_end_time.hour * 3600000 + last_sub_end_time.minute * 60000 + (last_sub_end_time.second + 1) * 1000
         cnt = 1
         last = len(subtitles_arr)
         for subtitle in subtitles_arr:
             print(f"Progress: {cnt}/{last}")
             cnt += 1
-            self._synthesize(subtitle.text, f"{self.TEMP_FOLDER_NAME}/{subtitle.number}.wav")
-            self._adjust_audio_speed(f"{self.TEMP_FOLDER_NAME}/{subtitle.number}.wav", 
-                                     f"{self.ADJ_FOLDER_NAME}/adj_{subtitle.number}.wav",
+            path_to_subtitle = f"{self.path_to_temp_folder}/{subtitle.number}.wav"
+            path_to_subtitle_adj = f"{self.path_to_temp_folder}/{subtitle.number}_adj.wav"
+
+            self._synthesize(subtitle.text,  path_to_subtitle)
+            self._adjust_audio_speed(path_to_subtitle,
+                                     path_to_subtitle_adj,
                                      subtitle.duration 
                                      )
         
-        self._merge_audios(final_audio_len, subtitles_arr, output_file_path)
+        
+        self._merge_audios(subtitles_arr, output_file_path)
+        shutil.rmtree(self.path_to_temp_folder)

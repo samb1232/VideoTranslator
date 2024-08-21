@@ -5,8 +5,8 @@ from nodes.speech_generator_custom_node import SpeechGeneratorCustomNode
 
 src_lang = "en"
 target_lang = "ru"
-folder_name = "test_files\\0016"
-video_file_name = "0016"
+folder_name = "test_files\\0009"
+video_file_name = "0009"
 
 voice = "female_1"
 
