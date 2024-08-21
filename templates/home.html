@@ -4,72 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='homepage_style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#create_subs_form').on('submit', function (e) {
-                e.preventDefault();
-                $('#create_subs_button').prop('disabled', true);
-                $('#vid_processing_message').show();
-                $.ajax({
-                    url: $(this).attr('action'),
-                    type: 'POST',
-                    data: $(this).serialize(),
-                    success: function (response) {
-                        location.reload();
-                    }
-                });
-            });
-
-            $('#translate_subs_form').on('submit', function (e) {
-                e.preventDefault();
-                $('#translate_subs_button').prop('disabled', true);
-                $('#translation_processing_message').show();
-                $.ajax({
-                    url: $(this).attr('action'),
-                    type: 'POST',
-                    data: $(this).serialize(),
-                    success: function (response) {
-                        location.reload();
-                    }
-                });
-            });
-
-            $('#generate_voice_form').on('submit', function (e) {
-                e.preventDefault();
-                $('#generate_voice_button').prop('disabled', true);
-                $('#voice_gen_processing_message').show();
-                $.ajax({
-                    url: $(this).attr('action'),
-                    type: 'POST',
-                    data: $(this).serialize(),
-                    success: function (response) {
-                        location.reload();
-                    }
-                });
-            });
-
-
-            $('form[enctype="multipart/form-data"]').on('submit', function (e) {
-                e.preventDefault();
-                var formData = new FormData(this);
-                $.ajax({
-                    url: $(this).attr('action'),
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            location.reload();
-                        } else {
-                            alert(response.message);
-                        }
-                    }
-                });
-            });
-        });
-    </script>
+    <script src="{{url_for('static', filename='homepage_script.js')}}"></script>
 </head>
 
 <body>
