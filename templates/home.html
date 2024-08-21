@@ -14,6 +14,7 @@
                 $.ajax({
                     url: $(this).attr('action'),
                     type: 'POST',
+                    data: $(this).serialize(),
                     success: function (response) {
                         location.reload();
                     }
@@ -27,13 +28,47 @@
                 $.ajax({
                     url: $(this).attr('action'),
                     type: 'POST',
+                    data: $(this).serialize(),
                     success: function (response) {
                         location.reload();
                     }
                 });
             });
+
+            $('#generate_voice_form').on('submit', function (e) {
+                e.preventDefault();
+                $('#generate_voice_button').prop('disabled', true);
+                $('#voice_gen_processing_message').show();
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function (response) {
+                        location.reload();
+                    }
+                });
+            });
+
+
+            $('form[enctype="multipart/form-data"]').on('submit', function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    }
+                });
+            });
         });
-        
     </script>
 </head>
 
@@ -41,12 +76,11 @@
     <h1>ExtFo Video Translator</h1>
     <div class="extract_subs_div">
         <h3>Extract subtitles from video</h3>
-        <p>Load the video mp4 file</p>
+        <p>Load the video .mp4 file</p>
         <form action="{{ url_for('upload_video') }}" method="post" enctype="multipart/form-data">
             <input type="file" name="file" accept=".mp4" required>
             <input type="submit" value="Upload">
         </form>
-        
 
         {% if 'vid_filename' in session %}
         <p>
@@ -54,40 +88,43 @@
         </p>
         <form id="create_subs_form" action="{{ url_for('create_subs') }}" method="post">
             <label for="vid_src_lang">Source language code:</label>
-            <input type="text" id="vid_src_lang" name="vid_src_lang" value="{{ session.get('vid_src_lang', 'en') }}" required>
+            <input type="text" id="vid_src_lang" name="vid_src_lang" value="{{ session.get('vid_src_lang', 'en') }}"
+                required>
             <input id="create_subs_button" type="submit" value="Create subs">
         </form>
-        <div id="vid_processing_message" style="display: none;">Processing...</div>
+        <div id="vid_processing_message" style="display: none;">Processing... Do NOT reload page</div>
         {% endif %}
 
         {% if 'subs_generated_filename' in session %}
-        <div class="subs_orig_lang_div">
-            <p>Subtitles created: {{session["subs_generated_filename"]}}. <a
-                    href="{{ url_for('download_file', filename=session['subs_filename']) }}">Download</a></p>
+        <div class="subs_generated_div">
+            <p>Subtitles generated: {{session["subs_generated_filename"]}}. <a
+                    href="{{ url_for('download_file', filename=session['subs_generated_filename']) }}">Download</a></p>
         </div>
         {% endif %}
     </div>
 
     <div class="translate_subs_div">
         <h3>Translate subtitles</h3>
-        <p>Load the subtitles srt file</p>
+        <p>Load the subtitles .srt file</p>
         <form action="{{ url_for('upload_subs_for_translation') }}" method="post" enctype="multipart/form-data">
             <input type="file" name="file" accept=".srt" required>
             <input type="submit" value="Upload">
         </form>
-        
+
         {% if 'subs_filename' in session %}
         <p>
             Subtitles file: {{session["subs_filename"]}}
         </p>
         <form id="translate_subs_form" action="{{ url_for('translate_subs') }}" method="post">
-            <label for="vid_src_lang">Source language code:</label>
-            <input type="text" id="trans_src_lang" name="trans_src_lang" value="{{ session.get('trans_src_lang', 'en') }}" required>
-            <label for="vid_src_lang">Target language code:</label>
-            <input type="text" id="trans_targ_lang" name="trans_targ_lang" value="{{ session.get('trans_targ_lang', 'ru') }}" required>
+            <label for="subs_src_lang">Source language code:</label>
+            <input type="text" id="trans_src_lang" name="trans_src_lang"
+                value="{{ session.get('trans_src_lang', 'en') }}" required>
+            <label for="subs_targ_lang">Target language code:</label>
+            <input type="text" id="trans_targ_lang" name="trans_targ_lang"
+                value="{{ session.get('trans_targ_lang', 'ru') }}" required>
             <input id="translate_subs_button" type="submit" value="Translate subs">
         </form>
-        <div id="translation_processing_message" style="display: none;">Processing...</div>
+        <div id="translation_processing_message" style="display: none;">Processing... Do NOT reload page</div>
         {% endif %}
 
         {% if 'trans_subs_filename' in session %}
@@ -99,8 +136,45 @@
     </div>
 
 
+    <div class="generate_voice_line_div">
+        <h3>Generate voice</h3>
+        <p>Load the subtitles .srt file</p>
+        <form action="{{ url_for('upload_subs_for_voice_generation') }}" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".srt" required>
+            <input type="submit" value="Upload">
+        </form>
 
-    <a href="{{ url_for('logout') }}">Logout</a>
+        <p>Load the example of speaker voice .wav file (about 1 minute)</p>
+        <form action="{{ url_for('upload_speaker_example') }}" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".wav" required>
+            <input type="submit" value="Upload">
+        </form>
+
+        {% if 'subs_to_voice_gen_filename' in session and 'speaker_example_filename' in session %}
+        <p>
+            Subtitles file: {{session["subs_to_voice_gen_filename"]}}
+        </p>
+        <form id="generate_voice_form" action="{{ url_for('generate_voice') }}" method="post">
+            <label for="voice_src_lang">Source language code:</label>
+            <input type="text" id="voice_src_lang" name="voice_src_lang"
+                value="{{ session.get('voice_src_lang', 'ru') }}" required>
+            <input id="generate_voice_button" type="submit" value="Generate">
+        </form>
+        <div id="voice_gen_processing_message" style="display: none;">Processing... Do NOT reload page</div>
+        {% endif %}
+
+        {% if 'generated_voice_filename' in session %}
+        <div class="voice_generated_div">
+            <p>Voice generated: {{session["generated_voice_filename"]}}. <a
+                    href="{{ url_for('download_file', filename=session['generated_voice_filename']) }}">Download</a></p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="logout">
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
 </body>
 
 </html>

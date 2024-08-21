@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
+from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash, send_from_directory
 from flask_mysqldb import MySQL
 import web_app_func
 import os
@@ -23,6 +23,7 @@ mysql = MySQL(app)
 
 # Секретный ключ для сессий
 app.secret_key = 'supersecretkey'
+
 
 def allowed_file(filename, allowed_extensions):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
@@ -69,8 +70,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('loggedin', None)
-    session.pop('username', None)
+    session.clear()
     return redirect(url_for('login'))
 
 
@@ -84,9 +84,10 @@ def upload_video():
         flash('No selected file')
         return redirect(url_for('home'))
     if upload_file(file, app.config['ALLOWED_EXTENSIONS_VID'], 'vid_filename'):
-        return redirect(url_for('home'))
+        session['extract_subs_status'] = 'unused'
+        return jsonify({'status': 'success'})
     else:
-        return redirect(url_for('home'))
+        return jsonify({'status': 'error', 'message': 'Invalid file type'})
 
 
 @app.route('/upload_srt_for_trans', methods=['POST'])
@@ -99,9 +100,10 @@ def upload_subs_for_translation():
         flash('No selected file')
         return redirect(url_for('home'))
     if upload_file(file, app.config['ALLOWED_EXTENSIONS_SUBS'], 'subs_filename'):
-        return redirect(url_for('home'))
+        session['translate_subs_status'] = 'unused'
+        return jsonify({'status': 'success'})
     else:
-        return redirect(url_for('home'))
+        return jsonify({'status': 'error', 'message': 'Invalid file type'})
 
  
 @app.route('/upload_srt_for_voice_gen', methods=['POST'])
@@ -114,9 +116,10 @@ def upload_subs_for_voice_generation():
         flash('No selected file')
         return redirect(url_for('home'))
     if upload_file(file, app.config['ALLOWED_EXTENSIONS_SUBS'], 'subs_to_voice_gen_filename'):
-        return redirect(url_for('home'))
+        session['generate_voice_status'] = 'unused'
+        return jsonify({'status': 'success'})
     else:
-        return redirect(url_for('home'))
+        return jsonify({'status': 'error', 'message': 'Invalid file type'})
     
  
 @app.route('/upload_speaker_example', methods=['POST'])
@@ -129,83 +132,94 @@ def upload_speaker_example():
         flash('No selected file')
         return redirect(url_for('home'))
     if upload_file(file, app.config['ALLOWED_EXTENSIONS_AUDIO'], 'speaker_example_filename'):
-        return redirect(url_for('home'))
+        session['generate_voice_status'] = 'unused'
+        return jsonify({'status': 'success'})
     else:
-        return redirect(url_for('home'))
+        return jsonify({'status': 'error', 'message': 'Invalid file type'})
     
 
 @app.route('/create_subs', methods=['POST'])
 def create_subs():
     if 'vid_filename' in session:
+        session['extract_subs_status'] = 'processing'
         filename = session['vid_filename']
-
         vid_src_lang = request.form.get('vid_src_lang', 'en')
         session['vid_src_lang'] = vid_src_lang
-
         subs_filename = filename.rsplit('.', 1)[0] + "_subs.srt"
         subs_filepath = os.path.join(app.config['UPLOAD_FOLDER'], subs_filename)
-        
-        web_app_func.create_subs_from_video(
-            in_file_path=os.path.join(app.config['UPLOAD_FOLDER'], filename), 
-            out_file_path=subs_filepath, 
-            src_lang=session['vid_src_lang']
+        try:
+            web_app_func.create_subs_from_video(
+                in_file_path=os.path.join(app.config['UPLOAD_FOLDER'], filename),
+                out_file_path=subs_filepath,
+                src_lang=session['vid_src_lang']
             )
-        session['subs_generated_filename'] = subs_filename
-        session['subs_generated_filepath'] = subs_filepath
-        return redirect(url_for('home'))
+            session['subs_generated_filename'] = subs_filename
+            session['subs_generated_filepath'] = subs_filepath
+            session['extract_subs_status'] = 'done'
+            return jsonify({'status': 'success', 'filename': subs_filename})
+        except Exception as e:
+            session['extract_subs_status'] = 'error'
+            return jsonify({'status': 'error', 'message': str(e)})
     else:
-        flash('No file uploaded')
-        return redirect(url_for('home'))
+        return jsonify({'status': 'error', 'message': 'No file uploaded'})
+    
 
 @app.route('/translate_subs', methods=['POST'])
 def translate_subs():
     if 'subs_filename' in session:
+        session['translate_subs_status'] = 'processing'
         filename = session['subs_filename']
-
         trans_src_lang = request.form.get('trans_src_lang', 'en')
         trans_targ_lang = request.form.get('trans_targ_lang', 'ru')
         session['trans_src_lang'] = trans_src_lang
         session['trans_targ_lang'] = trans_targ_lang
-
         translated_subs_filename = filename.rsplit('.', 1)[0] + f"_translated_{trans_targ_lang}.srt"
         translated_subs_filepath = os.path.join(app.config['UPLOAD_FOLDER'], translated_subs_filename)
-        
-        web_app_func.translate_subs(in_file_path=os.path.join(app.config['UPLOAD_FOLDER'], filename),
-                                    out_file_path=translated_subs_filepath,
-                                    src_lang=trans_src_lang,
-                                    targ_lang=trans_targ_lang
-                                    )
-        session['trans_subs_filename'] = translated_subs_filename
-        session['trans_subs_filepath'] = translated_subs_filepath
-        return redirect(url_for('home'))
+        try:
+            web_app_func.translate_subs(
+                in_file_path=os.path.join(app.config['UPLOAD_FOLDER'], filename),
+                out_file_path=translated_subs_filepath,
+                src_lang=trans_src_lang,
+                targ_lang=trans_targ_lang
+            )
+            session['trans_subs_filename'] = translated_subs_filename
+            session['trans_subs_filepath'] = translated_subs_filepath
+            session['translate_subs_status'] = 'done'
+            return url_for('home')
+        except Exception as e:
+            session['translate_subs_status'] = 'error'
+            return jsonify({'status': 'error', 'message': str(e)})
     else:
-        flash('No file uploaded')
-        return redirect(url_for('home'))
+        return jsonify({'status': 'error', 'message': 'No file uploaded'})
 
 
 @app.route('/generate_voice', methods=['POST'])
 def generate_voice():
     if 'subs_to_voice_gen_filename' in session and 'speaker_example_filename' in session:
-        
-        speaker_filepath = session['speaker_example_filepath']
-        subs_filepath = session['subs_to_voice_gen_filepath']
+        session['generate_voice_status'] = 'processing'
+        speaker_filepath =  os.path.join(app.config['UPLOAD_FOLDER'], session['speaker_example_filename'])
 
+        subs_filepath = os.path.join(app.config['UPLOAD_FOLDER'], session['subs_to_voice_gen_filename'])
         src_lang = request.form.get('voice_src_lang', 'en')
         session['voice_src_lang'] = src_lang
-
         subs_filename = session['subs_to_voice_gen_filename']
         out_audio_filename = subs_filename.rsplit('.', 1)[0] + ".wav"
         out_audio_filepath = os.path.join(app.config['UPLOAD_FOLDER'], out_audio_filename)
-        
-        web_app_func.generate_voice(src_lang=src_lang,
-                                    speaker_ex_filepath=speaker_filepath,
-                                    subs_filepath=subs_filepath,
-                                    out_filepath=out_audio_filepath)
-        session['generated_voice_filename'] = out_audio_filename
-        return redirect(url_for('home'))
+        try:
+            web_app_func.generate_voice(
+                src_lang=src_lang,
+                speaker_ex_filepath=speaker_filepath,
+                subs_filepath=subs_filepath,
+                out_filepath=out_audio_filepath
+            )
+            session['generated_voice_filename'] = out_audio_filename
+            session['generate_voice_status'] = 'done'
+            return jsonify({'status': 'success', 'filename': out_audio_filename})
+        except Exception as e:
+            session['generate_voice_status'] = 'error'
+            return jsonify({'status': 'error', 'message': str(e)})
     else:
-        flash('No file uploaded')
-        return redirect(url_for('home'))
+        return jsonify({'status': 'error', 'message': 'No file uploaded'})
 
 
 @app.route('/download/<filename>')
