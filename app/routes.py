@@ -1,18 +1,8 @@
-from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash, send_from_directory
-from flask_mysqldb import MySQL
-from external_modules.uploads_cleaner import clean_uploads_folder
-import web_app_func
+from flask import current_app as app, jsonify, render_template, request, redirect, url_for, session, flash, send_from_directory
+from .models import User
+from . import db
+import app.web_app_func as web_app_func
 import os
-
-app = Flask(__name__)
-
-# Конфигурация MySQL
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'user'
-app.config['MYSQL_PASSWORD'] = 'password'
-app.config['MYSQL_DB'] = 'flask_db'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-app.config['MYSQL_CHARSET'] = 'utf8mb4'
 
 # Конфигурация для загрузки файлов
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -20,15 +10,11 @@ app.config['ALLOWED_EXTENSIONS_VID'] = {'mp4'}
 app.config['ALLOWED_EXTENSIONS_SUBS'] = {"srt"}
 app.config['ALLOWED_EXTENSIONS_AUDIO'] = {"wav"}
 
-mysql = MySQL(app)
-
 # Секретный ключ для сессий
 app.secret_key = 'supersecretkey'
 
-
 def allowed_file(filename, allowed_extensions):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
-
 
 def upload_file(file, allowed_extensions, session_key):
     if file and allowed_file(file.filename, allowed_extensions):
@@ -38,12 +24,10 @@ def upload_file(file, allowed_extensions, session_key):
         file.save(filepath)
         session[session_key] = file.filename
         session[f'{session_key}_filepath'] = filepath
-        clean_uploads_folder(app.config['UPLOAD_FOLDER'])
         return True
     else:
         flash('Invalid file type')
         return False
-
 
 @app.route('/')
 def home():
@@ -52,19 +36,15 @@ def home():
     else:
         return redirect(url_for('login'))
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = %s AND password = %s', (username, password))
-        user = cursor.fetchone()
-        cursor.close()
+        user = User.query.filter_by(username=username, password=password).first()
         if user:
             session['loggedin'] = True
-            session['username'] = user['username']
+            session['username'] = user.username
             return redirect(url_for('home'))
         else:
             flash('Invalid credentials')
@@ -74,7 +54,6 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('login'))
-
 
 @app.route('/upload_vid', methods=['POST'])
 def upload_video():
@@ -91,7 +70,6 @@ def upload_video():
     else:
         return jsonify({'status': 'error', 'message': 'Invalid file type'})
 
-
 @app.route('/upload_srt_for_trans', methods=['POST'])
 def upload_subs_for_translation():
     if 'file' not in request.files:
@@ -107,7 +85,6 @@ def upload_subs_for_translation():
     else:
         return jsonify({'status': 'error', 'message': 'Invalid file type'})
 
- 
 @app.route('/upload_srt_for_voice_gen', methods=['POST'])
 def upload_subs_for_voice_generation():
     if 'file' not in request.files:
@@ -122,8 +99,7 @@ def upload_subs_for_voice_generation():
         return jsonify({'status': 'success'})
     else:
         return jsonify({'status': 'error', 'message': 'Invalid file type'})
-    
- 
+
 @app.route('/upload_speaker_example', methods=['POST'])
 def upload_speaker_example():
     if 'file' not in request.files:
@@ -138,7 +114,6 @@ def upload_speaker_example():
         return jsonify({'status': 'success'})
     else:
         return jsonify({'status': 'error', 'message': 'Invalid file type'})
-    
 
 @app.route('/create_subs', methods=['POST'])
 def create_subs():
@@ -160,11 +135,11 @@ def create_subs():
             session['extract_subs_status'] = 'done'
             return jsonify({'status': 'success', 'filename': subs_filename})
         except Exception as e:
+            print("Error:", e)
             session['extract_subs_status'] = 'error'
             return jsonify({'status': 'error', 'message': str(e)})
     else:
         return jsonify({'status': 'error', 'message': 'No file uploaded'})
-    
 
 @app.route('/translate_subs', methods=['POST'])
 def translate_subs():
@@ -194,13 +169,11 @@ def translate_subs():
     else:
         return jsonify({'status': 'error', 'message': 'No file uploaded'})
 
-
 @app.route('/generate_voice', methods=['POST'])
 def generate_voice():
     if 'subs_to_voice_gen_filename' in session and 'speaker_example_filename' in session:
         session['generate_voice_status'] = 'processing'
-        speaker_filepath =  os.path.join(app.config['UPLOAD_FOLDER'], session['speaker_example_filename'])
-
+        speaker_filepath = os.path.join(app.config['UPLOAD_FOLDER'], session['speaker_example_filename'])
         subs_filepath = os.path.join(app.config['UPLOAD_FOLDER'], session['subs_to_voice_gen_filename'])
         src_lang = request.form.get('voice_src_lang', 'en')
         session['voice_src_lang'] = src_lang
@@ -223,11 +196,6 @@ def generate_voice():
     else:
         return jsonify({'status': 'error', 'message': 'No file uploaded'})
 
-
 @app.route('/download/<filename>')
 def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
-
-
-if __name__ == '__main__':
-    app.run(debug=False)
+    return send_from_directory("../" + app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
