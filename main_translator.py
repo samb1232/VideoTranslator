@@ -1,6 +1,5 @@
-from external_modules.ts_translator import Translators
-from nodes.translate_subtitles_node import TranslateSubtitlesNode
+from nodes.translate_subtitles_node import TranslateSubtitlesNode, Translators
 
-translator_node = TranslateSubtitlesNode(Translators.yandex, " //")
+translator_node = TranslateSubtitlesNode(Translators.yandex, "en", "ru", " //")
 
-translator_node.translate_srt("test_files\\4\\cand4_subs.srt", "test_files\\4\\cand4_subs_ru.srt", "en", "ru")
+translator_node.translate_srt_file("test_files\\0000\\0000_en.srt", "test_files\\0000\\0000_ru.srt")

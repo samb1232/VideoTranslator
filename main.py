@@ -5,10 +5,10 @@ from nodes.speech_generator_custom_node import SpeechGeneratorCustomNode
 
 src_lang = "en"
 target_lang = "ru"
-folder_name = "test_files\\0009"
-video_file_name = "0009"
+folder_name = "test_files\\0018"
+video_file_name = "0018"
 
-voice = "female_1"
+voice = "robot"
 
 orig_subs_filename = f"{folder_name}\\{video_file_name}_subs_{src_lang}.srt"
 trans_subs_filename = f"{folder_name}\\{video_file_name}_subs_{src_lang}_{target_lang}.srt"
@@ -26,7 +26,7 @@ print("Translation done!")
 
 sg_node = SpeechGeneratorCustomNode(language=target_lang, 
                                     speaker_ex_voice_wav_file=f"test_files\\voices_samples\\{voice}.wav")
-sg_node.synthesise_full_audio(path_to_srt_subs=f"{folder_name}\\{video_file_name}_subs_{src_lang}_{target_lang}_yandex.srt", 
+sg_node.synthesise_full_audio(path_to_srt_subs=trans_subs_filename, 
                               output_file_path=f"{folder_name}\\{video_file_name}_{target_lang}.wav")
 print("Dub generation done!")
 
