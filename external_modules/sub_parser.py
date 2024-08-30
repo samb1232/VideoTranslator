@@ -133,20 +133,20 @@ def subtitle_to_dict(subtitle: Subtitle):
     }
 
 
-def format_time_ms_to_str(time_ms: int):
+def format_time_ms_to_str(time_ms: int, for_srt: bool = False):
     milliseconds = time_ms % 1000
     seconds = (time_ms // 1000) % 60
     minutes = (time_ms // (1000 * 60)) % 60
     hours = time_ms // (1000 * 60 * 60)
+    ms_sep = "," if for_srt else "."
     return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
 
 
-def parse_time_str_to_ms(time_str:str):
-    """Takes a time string in the format "HH:MM:SS.mmm" and converts it to a total number of milliseconds."""
-    hours, minutes, seconds = map(float, time_str.split(':'))
-    milliseconds = int((seconds % 1) * 1000)
-    seconds = int(seconds)
-    total_ms = int(hours * 3600000 + minutes * 60000 + seconds * 1000 + milliseconds)
+def parse_time_str_to_ms(time_str: str):
+    """Takes a time string in the format "HH:MM:SS,mmm" and converts it to a total number of milliseconds."""
+    hours, minutes, seconds_milliseconds = time_str.split(':')
+    seconds, milliseconds = map(int, seconds_milliseconds.split(','))
+    total_ms = int(hours) * 3600000 + int(minutes) * 60000 + seconds * 1000 + milliseconds
     return total_ms
 
 
@@ -174,8 +174,8 @@ def parse_srt_to_arr(subtitles_srt_string: str):
             continue
 
         start_time_str, end_time_str = time_match.groups()  # Find groups in the regex match
-        start_time_ms = parse_time_str_to_ms(start_time_str.replace(',', '.'))
-        end_time_ms = parse_time_str_to_ms(end_time_str.replace(',', '.'))
+        start_time_ms = parse_time_str_to_ms(start_time_str)
+        end_time_ms = parse_time_str_to_ms(end_time_str)
 
         text = []
         i += 2
