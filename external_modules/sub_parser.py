@@ -8,7 +8,7 @@ class Subtitle:
         self.id = id
         self.start_time = start_time
         self.end_time = end_time
-        self.duration = self.start_time - self.end_time
+        self.duration = end_time - start_time
         self.speaker = speaker
         self.text = text
 
