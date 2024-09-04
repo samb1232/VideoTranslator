@@ -1,10 +1,9 @@
 import os
 from pydub import AudioSegment
 
-OUTPUT_FOLDER = "speakers_voices"
 
-def extract_speaker_voices(audio_filepath, subtitles):
-    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+def extract_speaker_voices(audio_filepath, subtitles, out_folder = "speakers"):
+    os.makedirs(out_folder, exist_ok=True)
 
     max_duration_subtitles = {}
 
@@ -30,7 +29,7 @@ def extract_speaker_voices(audio_filepath, subtitles):
         # Trim audio
         speaker_audio = audio[start_time:end_time]
 
-        output_file_path = os.path.join(OUTPUT_FOLDER, f"{speaker}.wav")
+        output_file_path = os.path.join(out_folder, f"{speaker}.wav")
         speaker_audio.export(output_file_path, format="wav")
 
         speaker_audio_paths[speaker] = output_file_path

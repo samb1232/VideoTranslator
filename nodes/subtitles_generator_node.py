@@ -9,8 +9,8 @@ from external_modules.sub_parser import format_time_ms_to_str
 
 class VoceToSubtitlesNode:
     """Module for generating subtitles on original language"""
-    MAX_PAUSE_DURATION_MS = 500
-    MAX_SYMBOLS_PER_SUBTITLE = 3500
+    MAX_PAUSE_DURATION_MS = 400
+    MAX_SYMBOLS_PER_SUBTITLE = 500
     END_SENTENCE_SYMBOLS = ".?;:!"
 
     def __init__(self, src_lang: str, num_of_speakers: int = None) -> None:
@@ -74,12 +74,11 @@ class VoceToSubtitlesNode:
         video_dir, video_filename = os.path.split(video_file_path)
         if output_dir is None:
             output_dir = video_dir
-        elif not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        os.makedirs(output_dir, exist_ok=True)
         
         out_filename = video_filename.split(".")[-2]
 
-        audio_file_path = os.path.join(output_dir, f"audio_{out_filename}_{self.src_lang}.wav")
+        audio_file_path = os.path.join(output_dir, f"{out_filename}_{self.src_lang}.wav")
 
         extract_audio_from_video(video_file_path, audio_file_path)
         

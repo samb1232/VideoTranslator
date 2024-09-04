@@ -92,7 +92,6 @@ class TranslateSubtitlesNode:
         subs_translated_arr = self.translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
         sub_parser.write_subs_arr_to_srt_file(subs_translated_arr, output_file_path)
 
-        print("Done!")
         print("New file: ", output_file_path)
 
     def translate_json_file(self, input_file_path: str, output_file_path: str):
@@ -103,5 +102,4 @@ class TranslateSubtitlesNode:
         subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
         sub_parser.write_subs_arr_to_json_file(subs_translated_arr, output_file_path)
 
-        print("Done!")
         print("New file: ", output_file_path)
