@@ -4,10 +4,10 @@ import os
 from config import AAI_API_KEY
 import assemblyai as aai
 
-from external_modules.audio_extractor import extract_audio_from_video
-from external_modules.sub_parser import format_time_ms_to_str
+from modules.utilities.audio_extractor import extract_audio_from_video
+from modules.utilities.sub_parser import format_time_ms_to_str
 
-class VoceToSubtitlesNode:
+class SubsGenerator:
     """Module for generating subtitles on original language"""
     MAX_PAUSE_DURATION_MS = 400
     MAX_SYMBOLS_PER_SUBTITLE = 500

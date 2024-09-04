@@ -1,6 +1,5 @@
 import json
 import re
-from datetime import datetime, timedelta
 
 
 class Subtitle:
@@ -16,7 +15,7 @@ class Subtitle:
         return f"Subtitle(number={self.id}, start_time={self.start_time}, end_time={self.end_time}, duration={self.duration}, speaker={self.speaker}, text={self.text})"
 
 
-MIN_GAP_BETWEEN_SUBS_IN_SECS = timedelta(seconds=0.5)
+MIN_GAP_BETWEEN_SUBS_IN_SECS = 500
 MAX_SUB_TEXT_LENGTH_IN_SYMBOLS = 250
 
 

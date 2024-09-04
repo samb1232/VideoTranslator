@@ -5,13 +5,12 @@ from TTS.api import TTS
 from audiostretchy.stretch import stretch_audio
 import shutil
 
-from external_modules.sub_parser import parse_json_to_subtitles, parse_srt_to_arr_from_file
-from external_modules.voices_extractor import extract_speaker_voices
+from modules.utilities.sub_parser import parse_json_to_subtitles
+from modules.utilities.voice_extractor import extract_speaker_voices
 
 
-class SpeechGeneratorCustomNode:
+class VoiceGenerator:
     PATH_TO_MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"
-    # PATH_TO_MODEL = "tts_models/en/multi-dataset/tortoise-v2"
     BASE_TEMP_FOLDER_NAME = "temp"
 
     def __init__(self, language: str = None) -> None:
@@ -57,7 +56,7 @@ class SpeechGeneratorCustomNode:
 
         final_audio.export(output_file_name, format="wav")
 
-    def generate_audio(self, orig_audio_filepath: str,  json_subs_filepath: str, out_wav_filepath: str):
+    def generate_audio(self, orig_wav_filepath: str,  json_subs_filepath: str, out_wav_filepath: str):
         temp_folder_name = "temp_for_" + os.path.split(json_subs_filepath)[1].split(".")[-2]
         self.path_to_temp_folder = os.path.join(self.BASE_TEMP_FOLDER_NAME, temp_folder_name)
         os.makedirs(self.path_to_temp_folder, exist_ok=True)
@@ -65,7 +64,7 @@ class SpeechGeneratorCustomNode:
         subtitles_arr = parse_json_to_subtitles(json_subs_filepath)
         temp_speakers_folder = os.path.join(self.path_to_temp_folder, "speakers_wav")
         speakers_voices = extract_speaker_voices(
-            audio_filepath=orig_audio_filepath,
+            audio_filepath=orig_wav_filepath,
             subtitles=subtitles_arr,
             out_folder=temp_speakers_folder
         )

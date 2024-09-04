@@ -1,6 +1,6 @@
-from nodes.subtitles_generator_node import VoceToSubtitlesNode
+from modules.subs_generator import SubsGenerator
 
-voice_node = VoceToSubtitlesNode("en")
+voice_node = SubsGenerator("en")
 
 voice_node.transcript("test_files\\0000\\0000.mp4")
 

@@ -1,5 +1,4 @@
 import requests
-from config import YA_TRANSLATE_FOLDER_ID, YA_SPEECHKIT_API_KEY
 
 class MyYandexTranslator:
     def __init__(self, api_key, folder_id, src_lang, dest_lang):

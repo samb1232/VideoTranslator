@@ -1,33 +1,30 @@
-from external_modules.ts_translator import Translators
-from nodes.subtitles_generator_node import VoceToSubtitlesNode
-from nodes.translate_subtitles_node import TranslateSubtitlesNode
-from nodes.speech_generator_custom_node import SpeechGeneratorCustomNode
+from modules.subs_generator import SubsGenerator
+from modules.subs_translator import SubsTranslator, Translators
+from modules.voice_generator import VoiceGenerator
 
 src_lang = "en"
 target_lang = "ru"
-folder_name = "test_files\\0018"
-video_file_name = "0018"
+folder_name = "test_files\\0000"
+video_file_name = "test"
 
-voice = "robot"
+orig_subs_filename = f"{folder_name}\\{video_file_name}_{src_lang}.json"
+trans_subs_filename = f"{folder_name}\\{video_file_name}_{target_lang}.json"
 
-orig_subs_filename = f"{folder_name}\\{video_file_name}_subs_{src_lang}.srt"
-trans_subs_filename = f"{folder_name}\\{video_file_name}_subs_{src_lang}_{target_lang}.srt"
-
-voice_node = VoceToSubtitlesNode(src_lang)
-voice_node.transcript(f"{folder_name}\\{video_file_name}.mp4", orig_subs_filename)
-
+voice_node = SubsGenerator(src_lang)
+voice_node.transcript(f"{folder_name}\\{video_file_name}.mp4", folder_name)
 print("Subs extractions done!")
 
-translator_node = TranslateSubtitlesNode(Translators.yandex, " //")
-
-translator_node.translate_srt(orig_subs_filename, trans_subs_filename, src_lang, target_lang)
-
+translator_node = SubsTranslator(Translators.yandex, src_lang, target_lang, " //")
+translator_node.translate_json_file(orig_subs_filename, trans_subs_filename)
 print("Translation done!")
 
-sg_node = SpeechGeneratorCustomNode(language=target_lang, 
-                                    speaker_ex_voice_wav_file=f"test_files\\voices_samples\\{voice}.wav")
-sg_node.generate_audio(path_to_srt_subs=trans_subs_filename, 
-                              out_wav_filepath=f"{folder_name}\\{video_file_name}_{target_lang}.wav")
+sg_node = VoiceGenerator(language=target_lang)
+sg_node.generate_audio(
+    orig_wav_filepath=f"{folder_name}\\{video_file_name}_{src_lang}.wav",
+    json_subs_filepath=trans_subs_filename,
+    out_wav_filepath=f"{folder_name}\\{video_file_name}_{target_lang}.wav"
+    )
 print("Dub generation done!")
+
 
 print("Finish!")

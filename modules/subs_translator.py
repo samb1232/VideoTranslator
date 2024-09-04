@@ -2,8 +2,8 @@ import time
 from deep_translator import GoogleTranslator
 
 import config
-from external_modules import sub_parser
-from external_modules.my_yandex_translator import MyYandexTranslator
+from modules.utilities import sub_parser
+from modules.utilities.my_yandex_translator import MyYandexTranslator
 
 
 class Translators:
@@ -11,7 +11,7 @@ class Translators:
     yandex = 'yandex'
 
 
-class TranslateSubtitlesNode:
+class SubsTranslator:
     TRANSLATION_LIMIT = 5000
 
     def __init__(self, translator: Translators, source_lang, target_lang, end_line_separator) -> None:
@@ -30,6 +30,25 @@ class TranslateSubtitlesNode:
                 dest_lang=self.target_lang
                 )
 
+    def translate_srt_file(self, input_file_path: str, output_file_path: str):
+        """
+        Translate a subtitle .SRT file from original language to desired language.
+        """
+        subs_arr = sub_parser.parse_srt_to_arr_from_file(input_file_path)
+        subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
+        sub_parser.write_subs_arr_to_srt_file(subs_translated_arr, output_file_path)
+
+        print("New file: ", output_file_path)
+
+    def translate_json_file(self, input_file_path: str, output_file_path: str):
+        """
+        Translate a subtitle .JSON file from original language to desired language.
+        """
+        subs_arr = sub_parser.parse_json_to_subtitles(input_file_path)
+        subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
+        sub_parser.write_subs_arr_to_json_file(subs_translated_arr, output_file_path)
+
+        print("New file: ", output_file_path)
 
     def _parse_text_to_arr(self, text: str):
         final_arr = text.split("\n\n")
@@ -83,23 +102,3 @@ class TranslateSubtitlesNode:
             text_translatable += sub_text + end_line_separator + "\n\n"
 
         return subs_translated_arr
-
-    def translate_srt_file(self, input_file_path: str, output_file_path: str):
-        """
-        Translate a subtitle .SRT file from original language to desired language.
-        """
-        subs_arr = sub_parser.parse_srt_to_arr_from_file(input_file_path)
-        subs_translated_arr = self.translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
-        sub_parser.write_subs_arr_to_srt_file(subs_translated_arr, output_file_path)
-
-        print("New file: ", output_file_path)
-
-    def translate_json_file(self, input_file_path: str, output_file_path: str):
-        """
-        Translate a subtitle .JSON file from original language to desired language.
-        """
-        subs_arr = sub_parser.parse_json_to_subtitles(input_file_path)
-        subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
-        sub_parser.write_subs_arr_to_json_file(subs_translated_arr, output_file_path)
-
-        print("New file: ", output_file_path)
