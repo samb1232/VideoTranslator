@@ -1,7 +1,7 @@
 from flask import current_app as app, jsonify, render_template, request, redirect, url_for, session, flash, send_from_directory
 from .models import User
 from . import db
-import app.web_app_func as web_app_func
+import frontend.web_app_func as web_app_func
 import os
 
 # Конфигурация для загрузки файлов

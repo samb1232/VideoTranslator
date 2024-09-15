@@ -1,7 +1,7 @@
 import json
 import requests
 
-from config import YA_GPT_API_KEY, YA_GPT_FOLDER_ID
+from backend.config import YA_GPT_API_KEY, YA_GPT_FOLDER_ID
 from modules.utilities.sub_parser import parse_json_to_subtitles, write_subs_arr_to_json_file
 
 api_key = YA_GPT_API_KEY

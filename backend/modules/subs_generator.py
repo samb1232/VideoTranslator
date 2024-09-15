@@ -1,7 +1,7 @@
 import json
 import os
 
-from config import AAI_API_KEY
+from backend.config import AAI_API_KEY
 import assemblyai as aai
 
 from modules.utilities.audio_extractor import extract_audio_from_video

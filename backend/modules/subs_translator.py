@@ -1,7 +1,7 @@
 import time
 from deep_translator import GoogleTranslator
 
-import config
+import backend.config as config
 from modules.utilities import sub_parser
 from modules.utilities.my_yandex_translator import MyYandexTranslator
 

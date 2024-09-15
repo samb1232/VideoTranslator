@@ -1,5 +1,5 @@
-from app import create_app, db
-from app.models import User
+from frontend import create_app, db
+from frontend.models import User
 
 def add_user(username, password):
     app = create_app()
