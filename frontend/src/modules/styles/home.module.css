@@ -12,15 +12,13 @@ h1 {
     color: #4CAF50;
 }
 
-.extract_subs_div,
-.translate_subs_div,
-.generate_voice_line_div {
+.extract_subs_div{
     background-color: #fff;
     margin: 20px auto;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
+    max-width: 800px;
 }
 
 h3 {
@@ -42,13 +40,14 @@ label {
 input[type="text"],
 input[type="file"] {
     width: 100%;
-    padding: 10px;
+    padding: 10px 0px 10px 0px;
     margin-top: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
 input[type="submit"] {
+    width: 100%;
     background-color: #4CAF50;
     color: white;
     padding: 10px 20px;
@@ -58,20 +57,9 @@ input[type="submit"] {
     margin-top: 10px;
 }
 
-input[type="submit"]:hover {
-    background-color: #45a049;
-}
-
 input[type="submit"]:disabled {
     background-color: #ccc;
     cursor: not-allowed;
-}
-
-#vid_processing_message,
-#translation_processing_message,
-#voice_gen_processing_message {
-    color: red;
-    margin-top: 10px;
 }
 
 .subs_generated_div,
@@ -83,17 +71,24 @@ input[type="submit"]:disabled {
     margin-top: 20px;
 }
 
-.logout {
-    text-align: center;
-    margin-top: 20px;
+
+.top_right {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    align-items: center;
+    justify-content: center;
+    top: 10px;
+    right: 10px;
+    text-align: right;
 }
 
-.logout a {
-    color: #4CAF50;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.logout a:hover {
-    text-decoration: underline;
+.logout_button {
+    align-items: center;
+    margin-top: 10px;
+    padding: 5px 10px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    cursor: pointer;
 }

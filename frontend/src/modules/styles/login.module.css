@@ -18,7 +18,7 @@ h1 {
     color: #555;
 }
 
-form {
+.login_form {
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
@@ -42,7 +42,7 @@ input[type="password"] {
     box-sizing: border-box;
 }
 
-input[type="submit"] {
+.submit_btn {
     width: 100%;
     padding: 10px;
     background-color: #4CAF50;
@@ -53,7 +53,7 @@ input[type="submit"] {
     font-size: 16px;
 }
 
-input[type="submit"]:hover {
+.submit_btn:hover {
     background-color: #45a049;
 }
 
@@ -63,7 +63,7 @@ ul {
     margin: 20px 0;
 }
 
-ul li {
+.error_message_div {
     background-color: #f8d7da;
     color: #721c24;
     padding: 10px;
