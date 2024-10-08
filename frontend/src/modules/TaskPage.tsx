@@ -1,7 +1,8 @@
-import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
+import { Link, LoaderFunctionArgs, useLoaderData } from "react-router-dom";
 import httpClient from "../utils/httpClient";
 
-import styles from "./styles/taskItem.module.css";
+import styles from "./styles/taskPage.module.css";
+import VideoUploader from "./VideoUploader";
 interface TaskData {
   id: string;
   title: string;
@@ -21,7 +22,6 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const response = await httpClient.get("//localhost:5000/get_task/" + taskId);
   if (response.data.status == "success") {
     const taskInfo = response.data.task_info as TaskData;
-    console.log(taskInfo);
 
     return { taskInfo };
   }
@@ -38,18 +38,11 @@ export default function TaskPage() {
 
   return (
     <div className={styles.task_body}>
+      <Link to="/" className={styles.home_link}>
+        Home
+      </Link>
       <h1>{taskInfo.title}</h1>
-      <p>ID: {taskInfo.id}</p>
-      <p>Title: {taskInfo.title}</p>
-      <p>Creation Date: {taskInfo.creation_date}</p>
-      <p>Last Used: {taskInfo.last_used}</p>
-      <p>Language From: {taskInfo.lang_from}</p>
-      <p>Language To: {taskInfo.lang_to}</p>
-      <p>Source Video Path: {taskInfo.src_vid_path}</p>
-      <p>Source Audio Path: {taskInfo.src_audio_path}</p>
-      <p>Source Subs Path: {taskInfo.src_subs_path}</p>
-      <p>Translated Subs Path: {taskInfo.translated_subs_path}</p>
-      <p>Translated Audio Path: {taskInfo.translated_audio_path}</p>
+      <VideoUploader taskId={taskInfo.id} />
     </div>
   );
 }

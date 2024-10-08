@@ -76,7 +76,7 @@ function HomePage() {
   };
 
   return (
-    <div className={styles.home_page_div}>
+    <div className={styles.body}>
       <div className={styles.top_right}>
         <div>Hello, {user?.username}</div>
         <button className={styles.logout_button} onClick={logoutUser}>

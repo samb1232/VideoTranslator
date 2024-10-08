@@ -1,0 +1,23 @@
+/* Стили для .task_body */
+.task_body {
+    padding: 20px;
+    text-align: center;
+    position: relative;
+  }
+  
+  /* Стили для ссылки Home */
+  .home_link {
+    font-size: large;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+  
+  .home_link:hover {
+    color: #0056b3;
+  }
+  
