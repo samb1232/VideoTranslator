@@ -254,3 +254,5 @@ packages/react-devtools-timeline/dist
 
 test_files
 config.py
+
+results
