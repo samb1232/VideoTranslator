@@ -4,6 +4,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ErrorPage from "./modules/ErrorPage.tsx";
 import HomePage from "./modules/HomePage.tsx";
 import LoginPage from "./modules/LoginPage.tsx";
+import TaskPage from "./modules/TaskPage.tsx";
+import { loader as taskLoader } from "./modules/TaskPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -15,6 +17,12 @@ const router = createBrowserRouter([
     path: "/login",
     element: <LoginPage />,
     errorElement: <ErrorPage />,
+  },
+  {
+    path: "/task/:taskId",
+    element: <TaskPage />,
+    errorElement: <ErrorPage />,
+    loader: taskLoader,
   },
 ]);
 

@@ -3,7 +3,7 @@ import { Form } from "react-router-dom";
 
 import styles_loading_anim from "./styles/loading_anim.module.css";
 import styles_home from "./styles/home.module.css";
-import uploadFileToServer from "../utils/fileUploader";
+import httpClient from "../utils/httpClient";
 
 const SubsExtractorModule: React.FC = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -22,7 +22,19 @@ const SubsExtractorModule: React.FC = () => {
     }
 
     try {
-      const response = await uploadFileToServer(videoFile);
+      const formData = new FormData();
+      formData.append("video_file", videoFile);
+      formData.append("src_lang", sourceLanguage);
+
+      const response = await httpClient.post(
+        "http://localhost:5000/create_subs",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       console.log(response);
     } catch (error) {
       console.log(error);

@@ -47,7 +47,7 @@ function LoginPage() {
   }, []);
 
   return (
-    <div>
+    <div className={styles.login_body}>
       <h1>ExtFo Video Translator</h1>
       <Form className={styles.login_form} onSubmit={handleSubmit}>
         {errorMessage != "" && (

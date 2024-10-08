@@ -99,4 +99,8 @@ class SubsGenerator:
             subs_json_arr.extend(subs_splitted_arr)
         with open(json_out_filepath, 'w', encoding='utf-8') as file:
             json.dump(subs_json_arr, file, ensure_ascii=False, indent=4)
+        
+        # returns a tuple of the srt and json file paths
+        return (srt_out_filepath, json_out_filepath, audio_file_path)
+        
 
