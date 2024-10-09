@@ -5,24 +5,16 @@ import styles from "./styles/taskItem.module.css";
 
 interface TaskItemProps {
   task: TaskDescription;
-  onDelete: (id: string) => void;
 }
 
-function TaskItem({ task, onDelete }: TaskItemProps) {
-  const handleDelete = () => {
-    return onDelete(task.id); // TODO: DELETE THIS BUTTON BEFORE COMMIT
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      onDelete(task.id);
-    }
-  };
-
+function TaskItem({ task }: TaskItemProps) {
   return (
     <li className={styles.task_item}>
       <div className={styles.task_content}>
         <div className={styles.task_title}>{task.title}</div>
         <div className={styles.task_date}>{formatDate(task.last_used)}</div>
       </div>
-      <button className={styles.delete_button} onClick={handleDelete}>
+      {/* <button className={styles.delete_button} onClick={handleDelete}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -40,7 +32,7 @@ function TaskItem({ task, onDelete }: TaskItemProps) {
           <line x1="10" y1="11" x2="10" y2="17"></line>
           <line x1="14" y1="11" x2="14" y2="17"></line>
         </svg>
-      </button>
+      </button> */}
     </li>
   );
 }

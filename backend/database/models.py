@@ -20,13 +20,17 @@ class Task(db.Model):
     title = db.Column(db.Text, nullable=False)
     creation_date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     last_used = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
-    lang_from = db.Column(db.String(3), nullable=True)
-    lang_to = db.Column(db.String(3), nullable=True)
-    src_vid_path = db.Column(db.Text, nullable=True)
-    src_audio_path = db.Column(db.Text, nullable=True)
-    src_subs_path = db.Column(db.Text, nullable=True)
-    translated_subs_path = db.Column(db.Text, nullable=True)
-    translated_audio_path = db.Column(db.Text, nullable=True)
+    lang_from = db.Column(db.String(3), default='', nullable=False)
+    lang_to = db.Column(db.String(3), default='', nullable=False)
+    src_vid_path = db.Column(db.Text, default='', nullable=False)
+    src_audio_path = db.Column(db.Text, default='', nullable=False)
+    srt_orig_subs_path = db.Column(db.Text, default='', nullable=False)
+    srt_translated_subs_path = db.Column(db.Text, default='', nullable=False)
+    json_translated_subs_path = db.Column(db.Text, default='', nullable=False)
+    translated_audio_path = db.Column(db.Text, default='', nullable=False)
+    subs_generation_processing = db.Column(db.Boolean, default=False, nullable=False)
+    voice_generation_processing = db.Column(db.Boolean, default=False, nullable=False)
+
 
     def to_json(self):
         return {
@@ -38,9 +42,12 @@ class Task(db.Model):
             'lang_to': self.lang_to,
             'src_vid_path': self.src_vid_path,
             'src_audio_path': self.src_audio_path,
-            'src_subs_path': self.src_subs_path,
-            'translated_subs_path': self.translated_subs_path,
-            'translated_audio_path': self.translated_audio_path
+            'srt_orig_subs_path': self.srt_orig_subs_path,
+            'srt_translated_subs_path': self.srt_translated_subs_path,
+            'json_translated_subs_path': self.json_translated_subs_path,
+            'translated_audio_path': self.translated_audio_path,
+            'subs_generation_processing': self.subs_generation_processing,
+            'voice_generation_processing': self.voice_generation_processing,
         }
 
     

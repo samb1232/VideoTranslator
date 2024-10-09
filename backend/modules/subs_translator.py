@@ -14,7 +14,7 @@ class Translators:
 class SubsTranslator:
     TRANSLATION_LIMIT = 5000
 
-    def __init__(self, translator: Translators, source_lang, target_lang, end_line_separator) -> None:
+    def __init__(self, translator: Translators, source_lang, target_lang, end_line_separator=" //") -> None:
         self.translator = translator
         self.source_lang = source_lang
         self.target_lang = target_lang

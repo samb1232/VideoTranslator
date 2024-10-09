@@ -78,29 +78,35 @@ class SubsGenerator:
         
         out_filename = video_filename.split(".")[-2]
 
-        audio_file_path = os.path.join(output_dir, f"{out_filename}_{self.src_lang}.wav")
+        self.audio_file_path = os.path.join(output_dir, f"{out_filename}_src.wav")
 
-        extract_audio_from_video(video_file_path, audio_file_path)
+        extract_audio_from_video(video_file_path, self.audio_file_path)
         
-        transcript = aai.Transcriber().transcribe(audio_file_path, self.aai_conf)
+        transcript = aai.Transcriber().transcribe(self.audio_file_path, self.aai_conf)
 
         # Export subtitles as srt
         subtitles = transcript.export_subtitles_srt()
-        srt_out_filepath = os.path.join(output_dir,  f"{out_filename}_{self.src_lang}.srt")
+        self.srt_out_filepath = os.path.join(output_dir,  f"{out_filename}_src.srt")
         # subtitles = correct_subtitles_length(subtitles)
-        with open(srt_out_filepath, "w", encoding="utf-8") as srt_file:
+        with open(self.srt_out_filepath, "w", encoding="utf-8") as srt_file:
             srt_file.write(subtitles)
 
         #Export subtitles as json
-        json_out_filepath = os.path.join(output_dir,  f"{out_filename}_{self.src_lang}.json")
+        self.json_out_filepath = os.path.join(output_dir,  f"{out_filename}_src.json")
         subs_json_arr = []
         for utterance in transcript.utterances:
             subs_splitted_arr = self._split_utterance(utterance)
             subs_json_arr.extend(subs_splitted_arr)
-        with open(json_out_filepath, 'w', encoding='utf-8') as file:
+        with open(self.json_out_filepath, 'w', encoding='utf-8') as file:
             json.dump(subs_json_arr, file, ensure_ascii=False, indent=4)
-        
-        # returns a tuple of the srt and json file paths
-        return (srt_out_filepath, json_out_filepath, audio_file_path)
+    
+    def get_audio_out_filepath(self):
+        return self.audio_file_path
+    
+    def get_json_out_filepath(self):
+        return self.json_out_filepath
+    
+    def get_srt_out_filepath(self):
+        return self.srt_out_filepath
         
 

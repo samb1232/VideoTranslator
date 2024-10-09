@@ -56,21 +56,6 @@ function HomePage() {
     }
   };
 
-  const handleDeleteTask = async (id: string) => {
-    try {
-      const response = await httpClient.delete(
-        "//localhost:5000/delete_task/" + id
-      );
-      if (response.data.status === "success") {
-        // refresh tasks list
-        // fetchTasks();
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Error deleting task:", error);
-    }
-  };
-
   const openModal = () => {
     setIsModalOpen(true);
   };
@@ -101,7 +86,7 @@ function HomePage() {
               className={styles.link_taskItem}
               to={"/task/" + task.id}
             >
-              <TaskItem key={task.id} task={task} onDelete={handleDeleteTask} />
+              <TaskItem key={task.id} task={task} />
             </Link>
           ))
         )}

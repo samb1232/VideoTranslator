@@ -1,0 +1,97 @@
+from datetime import datetime
+from typing import List
+from sqlalchemy.exc import SQLAlchemyError
+
+
+from database.models import Task, User, db
+
+
+def get_user_by_username(username: str) -> User:
+    return User.query.filter_by(username=username).first()
+
+
+def get_user_by_id(user_id: str) -> User:
+    return User.query.filter_by(id=user_id).first()
+
+
+def get_all_tasks_list() -> List:
+    return Task.query.order_by(Task.last_used).all()
+
+
+def get_task_by_id(task_id: str) -> Task:
+    return Task.query.filter_by(id=task_id).first()
+
+
+def create_new_task(title: str) -> Task:
+    new_task = Task(
+        title=title,
+        last_used=datetime.now(),
+        creation_date = datetime.now()
+    )
+    db.session.add(new_task)
+    db.session.commit()
+    return new_task
+
+
+def delete_task_by_id(task_id: str) -> bool:
+    task = get_task_by_id(task_id)
+    if task is None:
+        return False
+    db.session.delete(task)
+    db.session.commit()
+    return True
+
+
+def set_task_subs_generation_processing(task_id: str, value: bool):
+    task = get_task_by_id(task_id)
+    if task is None:
+        raise ValueError(f"Task with id {task_id} not found")
+    task.subs_generation_processing = value
+    task.last_used=datetime.now()
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise e
+    
+
+def update_task_after_subs_created(
+        task_id: str, 
+        lang_from: str, 
+        lang_to: str, 
+        src_vid_path: str,
+        src_audio_path: str, 
+        srt_orig_subs_path: str, 
+        srt_translated_subs_path: str, 
+        json_translated_subs_path: str
+        ):
+    task = get_task_by_id(task_id)
+    if task is None:
+        raise ValueError(f"Task with id {task_id} not found")
+    task.lang_from = lang_from
+    task.lang_to = lang_to
+    task.src_vid_path = src_vid_path
+    task.src_audio_path = src_audio_path
+    task.srt_orig_subs_path = srt_orig_subs_path
+    task.srt_translated_subs_path = srt_translated_subs_path
+    task.json_translated_subs_path = json_translated_subs_path
+    task.last_used=datetime.now()
+    task.subs_generation_processing=False
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise e
+    
+
+def reset_all_task_processing():
+    tasks = Task.query.all()
+    for task in tasks:
+        task.subs_generation_processing = False
+        task.voice_generation_processing = False
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise e
+    

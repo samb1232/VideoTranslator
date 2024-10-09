@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import styles_loading_anim from "./styles/loading_anim.module.css";
 import styles from "./styles/videoUploader.module.css";
 import httpClient from "../utils/httpClient";
+import { TaskData } from "../utils/taskData";
 
 const languages = [
   { value: "", label: "Select language" },
@@ -13,14 +14,16 @@ const languages = [
 ];
 
 interface VideoUploaderProps {
-  taskId: string;
+  taskData: TaskData;
 }
 
-export default function VideoUploader({ taskId }: VideoUploaderProps) {
+export default function VideoUploader({ taskData }: VideoUploaderProps) {
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [processing, setProcessing] = useState<boolean>(false);
-  const [languageFrom, setLanguageFrom] = useState<string>("");
-  const [languageTo, setLanguageTo] = useState<string>("");
+  const [processing, setProcessing] = useState<boolean>(
+    taskData.subs_generation_processing
+  );
+  const [languageFrom, setLanguageFrom] = useState<string>(taskData.lang_from);
+  const [languageTo, setLanguageTo] = useState<string>(taskData.lang_to);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +43,7 @@ export default function VideoUploader({ taskId }: VideoUploaderProps) {
 
     try {
       const formData = new FormData();
-      formData.append("task_id", taskId);
+      formData.append("task_id", taskData.id);
       formData.append("video_file", videoFile);
       formData.append("lang_from", languageFrom);
       formData.append("lang_to", languageTo);
