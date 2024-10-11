@@ -28,6 +28,7 @@ class Task(db.Model):
     srt_translated_subs_path = db.Column(db.Text, default='', nullable=False)
     json_translated_subs_path = db.Column(db.Text, default='', nullable=False)
     translated_audio_path = db.Column(db.Text, default='', nullable=False)
+    translated_video_path = db.Column(db.Text, default='', nullable=False)
     subs_generation_processing = db.Column(db.Boolean, default=False, nullable=False)
     voice_generation_processing = db.Column(db.Boolean, default=False, nullable=False)
 
@@ -46,6 +47,7 @@ class Task(db.Model):
             'srt_translated_subs_path': self.srt_translated_subs_path,
             'json_translated_subs_path': self.json_translated_subs_path,
             'translated_audio_path': self.translated_audio_path,
+            'translated_video_path': self.translated_video_path,
             'subs_generation_processing': self.subs_generation_processing,
             'voice_generation_processing': self.voice_generation_processing,
         }

@@ -5,6 +5,7 @@ from TTS.api import TTS
 from audiostretchy.stretch import stretch_audio
 import shutil
 
+from modules.utilities import audio_injector
 from modules.utilities.sub_parser import parse_json_to_subtitles
 from modules.utilities.voice_extractor import extract_speaker_voices
 
@@ -87,3 +88,7 @@ class VoiceGenerator:
         
         self._merge_audios(subtitles_arr, out_wav_filepath)
         shutil.rmtree(self.path_to_temp_folder)
+
+    @staticmethod
+    def replace_audio_in_video(in_audio_path: str, in_video_path: str, out_video_path: str):
+        audio_injector.replace_audio_in_video(in_audio_path, in_video_path, out_video_path, "200k")

@@ -54,6 +54,18 @@ def set_task_subs_generation_processing(task_id: str, value: bool):
         db.session.rollback()
         raise e
     
+def set_task_voice_generation_processing(task_id: str, value: bool):
+    task = get_task_by_id(task_id)
+    if task is None:
+        raise ValueError(f"Task with id {task_id} not found")
+    task.voice_generation_processing = value
+    task.last_used=datetime.now()
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise e
+    
 
 def update_task_after_subs_created(
         task_id: str, 
@@ -82,7 +94,26 @@ def update_task_after_subs_created(
     except SQLAlchemyError as e:
         db.session.rollback()
         raise e
-    
+
+
+def update_task_after_voice_generated(
+        task_id: str, 
+        translated_audio_path: str,
+        translated_video_path: str,
+        ):
+    task = get_task_by_id(task_id)
+    if task is None:
+        raise ValueError(f"Task with id {task_id} not found")
+    task.translated_audio_path = translated_audio_path
+    task.translated_video_path = translated_video_path
+    task.last_used=datetime.now()
+    task.subs_generation_processing=False
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise e
+
 
 def reset_all_task_processing():
     tasks = Task.query.all()

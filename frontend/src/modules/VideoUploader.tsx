@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-
-import styles_loading_anim from "./styles/loading_anim.module.css";
-import styles from "./styles/videoUploader.module.css";
 import httpClient from "../utils/httpClient";
 import { TaskData } from "../utils/taskData";
 
+import styles_loading_anim from "./styles/loading_anim.module.css";
+import styles from "./styles/videoUploader.module.css";
 const languages = [
   { value: "", label: "Select language" },
   { value: "ru", label: "Russian" },
@@ -48,18 +47,14 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
       formData.append("lang_from", languageFrom);
       formData.append("lang_to", languageTo);
 
-      const response = await httpClient.post(
-        "http://localhost:5000/create_subs",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      console.log(response);
+      await httpClient.post("http://localhost:5000/create_subs", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
     } catch (error) {
       console.log(error);
+      setProcessing(false);
     }
 
     setProcessing(false);
@@ -112,10 +107,10 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
           <div className={styles_loading_anim.loader}></div>
         ) : (
           <button
-            className={styles.button}
+            className={styles_loading_anim.button}
             onClick={handleClickButton}
             disabled={
-              videoFile == null ||
+              (videoFile == null && !taskData.src_vid_path) ||
               languageFrom == "" ||
               languageTo == "" ||
               processing

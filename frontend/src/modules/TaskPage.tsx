@@ -8,6 +8,8 @@ import httpClient from "../utils/httpClient";
 import VideoUploader from "./VideoUploader";
 import DownloadButton from "./DownloadButton";
 import { TaskData } from "../utils/taskData";
+import SubtitleEditor from "./SubtitlesEditor";
+import VideoPlayer from "./VideoPlayer";
 
 import styles from "./styles/taskPage.module.css";
 
@@ -57,19 +59,34 @@ export default function TaskPage() {
       </button>
       <h1>{taskInfo.title}</h1>
       <VideoUploader taskData={taskInfo} />
+      {taskInfo.json_translated_subs_path && (
+        <>
+          <h1 className={styles.subs_editor_header}>Subtitle Editor</h1>
+          <div className={styles.subs_and_video_div}>
+            <SubtitleEditor taskData={taskInfo} />
+            {taskInfo.translated_video_path == "" ? (
+              <div>Video result displays after generating voice</div>
+            ) : (
+              <div className={styles.video_player_div}>
+                <VideoPlayer taskData={taskInfo} />
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       <div className={styles.results_div}>
-        <h3>Results:</h3>
+        {taskInfo.src_audio_path && <h3>Results:</h3>}
+        {taskInfo.translated_audio_path && (
+          <DownloadButton
+            filepath={taskInfo.translated_audio_path}
+            title="Download translated audio"
+          />
+        )}
         {taskInfo.src_audio_path && (
           <DownloadButton
             filepath={taskInfo.src_audio_path}
             title="Download original audio"
-          />
-        )}
-        {taskInfo.json_translated_subs_path && (
-          <DownloadButton
-            filepath={taskInfo.json_translated_subs_path}
-            title={"Download JSON subs in " + taskInfo.lang_to}
           />
         )}
         {taskInfo.srt_orig_subs_path && (
@@ -82,12 +99,6 @@ export default function TaskPage() {
           <DownloadButton
             filepath={taskInfo.srt_translated_subs_path}
             title={"Download SRT subs in " + taskInfo.lang_to}
-          />
-        )}
-        {taskInfo.translated_audio_path && (
-          <DownloadButton
-            filepath={taskInfo.translated_audio_path}
-            title={"Download audio voice in " + taskInfo.lang_to}
           />
         )}
       </div>

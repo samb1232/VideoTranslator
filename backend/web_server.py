@@ -1,8 +1,9 @@
-from datetime import datetime
 import os
-from flask import Flask, jsonify, request, send_file, send_from_directory, session
+import json
+from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 from flask_session import Session
+from modules.voice_generator import VoiceGenerator
 from database import db_operations
 from modules.subs_generator import SubsGenerator
 from modules.subs_translator import SubsTranslator, Translators
@@ -67,6 +68,81 @@ def logout_user():
     return "200"
 
 
+@app.route("/get_all_tasks",  methods=["GET"])
+def get_all_tasks():
+    tasks_arr = db_operations.get_all_tasks_list()
+    tasks = []
+    for task in tasks_arr:
+        task_dict  = {
+            "id": task.id,
+            "title":  task.title,
+            "last_used":  task.last_used
+        }
+        tasks.append(task_dict)
+    # reverse tasks list
+    tasks.reverse()
+    return jsonify({'status': 'success', "tasks":  tasks}), 200
+
+
+@app.route('/get_task/<id>', methods=['GET'])
+def get_task(id):
+    task: Task = db_operations.get_task_by_id(id)
+    if task is None:
+        return jsonify({'status': 'error', "message":  "Task not found"}),  404
+    
+    return jsonify({'status': 'success', "task_info": task.to_json()}), 200
+
+
+@app.route("/create_task",  methods=["POST"])
+def  create_task():
+    request_json = request.json
+    title = request_json['title']
+    task = db_operations.create_new_task(title=title)
+    return jsonify({'status': 'success', "task_id":  task.id}), 200
+
+
+@app.route('/delete_task/<id>', methods=['DELETE'])
+def delete_task(id):
+    is_success = db_operations.delete_task_by_id(id)
+    if is_success:
+        return jsonify({'status': 'success'}), 200
+    return jsonify({'status': 'error', "message":  "Task not found"}),  404
+    
+
+@app.route('/download/<path:filepath>')
+def download_file(filepath):
+    if app.config["UPLOAD_FOLDER"] not in filepath:
+        return jsonify({'status': 'error', "message":  f"Permission to download file {filepath} denided"}), 403
+    return send_from_directory("../", filepath, as_attachment=True)
+
+
+@app.route('/get_video/<path:filepath>')
+def get_video(filepath):
+    if app.config["UPLOAD_FOLDER"] not in filepath:
+        return jsonify({'status': 'error', "message":  f"Permission to download file {filepath} denided"}), 403
+    return send_from_directory("../", filepath)
+
+
+@app.route("/get_json_subs/<task_id>",  methods=["GET"])
+def  get_json_subs(task_id):
+    task = db_operations.get_task_by_id(task_id)
+    if task is None:
+        return jsonify({'status': 'error', "message":  "Task not found"}), 404
+    subs_path = task.json_translated_subs_path
+    if subs_path == "":
+        return jsonify({'status': 'error', "message":  "No subs for this task"}), 404
+
+    try:
+        with open(subs_path, "r", encoding="utf-8") as json_file:
+            json_subs = json.load(json_file)
+    except FileNotFoundError:
+        return jsonify({'status': 'error', 'message': 'Subtitles file not found'}), 404
+    except json.JSONDecodeError:
+        return jsonify({'status': 'error', 'message': 'Invalid JSON format'}), 400
+
+    return jsonify({'status': 'success', 'json_subs': json_subs}), 200
+
+
 @app.route("/create_subs", methods=["POST"])
 def create_subs():
     try:
@@ -129,54 +205,51 @@ def create_subs():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-
-@app.route("/get_all_tasks",  methods=["GET"])
-def  get_all_tasks():
-    tasks_arr = db_operations.get_all_tasks_list()
-    tasks = []
-    for task in tasks_arr:
-        task_dict  = {
-            "id": task.id,
-            "title":  task.title,
-            "last_used":  task.last_used
-        }
-        tasks.append(task_dict)
-    # reverse tasks list
-    tasks.reverse()
-    return jsonify({'status': 'success', "tasks":  tasks}), 200
-
-
-@app.route('/get_task/<id>', methods=['GET'])
-def get_task(id):
-    task: Task = db_operations.get_task_by_id(id)
+@app.route("/generate_voice/<task_id>", methods=["POST"])
+def generate_voice(task_id):
+    task = db_operations.get_task_by_id(task_id)
     if task is None:
-        return jsonify({'status': 'error', "message":  "Task not found"}),  404
-    
-    return jsonify({'status': 'success', "task_info": task.to_json()}), 200
+        return jsonify({'status': 'error', 'message': 'Task not found'}), 404
 
+    subs_path = task.json_translated_subs_path
+    if not subs_path:
+        return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
 
-@app.route("/create_task",  methods=["POST"])
-def  create_task():
-    request_json = request.json
-    title = request_json['title']
-    task = db_operations.create_new_task(title=title)
-    return jsonify({'status': 'success', "task_id":  task.id}), 200
+    try:
+        db_operations.set_task_voice_generation_processing(task_id=task_id, value=True)
+        new_subs = request.json.get('json_subs')
+        if new_subs is None:
+            return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
 
+        with open(subs_path, "w") as json_file:
+            json.dump(new_subs, json_file, indent=4)
 
-@app.route('/delete_task/<id>', methods=['DELETE'])
-def delete_task(id):
-    is_success = db_operations.delete_task_by_id(id)
-    if is_success:
-        return jsonify({'status': 'success'}), 200
-    return jsonify({'status': 'error', "message":  "Task not found"}),  404
-    
+        task_folder = get_task_folder(task_id)
+        final_audio_filepath = os.path.join(task_folder,  f"{task_id}_audio_{task.lang_to}.wav")
+        final_video_filepath = os.path.join(task_folder,  f"{task_id}_vid_{task.lang_to}.mp4")
 
-@app.route('/download/<path:filepath>')
-def download_file(filepath):
-    if app.config["UPLOAD_FOLDER"] not in filepath:
-        return jsonify({'status': 'error', "message":  f"Permission to download file {filepath} denided"}), 403
-    return send_from_directory("../", filepath, as_attachment=True)
+        voice_generator = VoiceGenerator(task.lang_to) 
+        voice_generator.generate_audio(
+            orig_wav_filepath=task.src_audio_path,
+            json_subs_filepath=task.json_translated_subs_path,
+            out_wav_filepath=final_audio_filepath
+        )
+        voice_generator.replace_audio_in_video(
+            in_audio_path=final_audio_filepath,
+            in_video_path=task.src_vid_path,
+            out_video_path=final_video_filepath
+        )
+        db_operations.update_task_after_voice_generated(
+            task_id=task_id,
+            translated_audio_path=final_audio_filepath,
+            translated_video_path=final_video_filepath
+        )
+    except Exception as e:
+        db_operations.set_task_voice_generation_processing(task_id=task_id, value=False)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
+    db_operations.set_task_voice_generation_processing(task_id=task_id, value=False)
+    return jsonify({'status': 'success'}), 200
 
 
 if __name__ == '__main__':

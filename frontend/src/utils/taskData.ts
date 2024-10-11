@@ -11,6 +11,7 @@ export interface TaskData {
     srt_translated_subs_path: string;
     json_translated_subs_path: string;
     translated_audio_path: string;
+    translated_video_path: string;
     subs_generation_processing: boolean;
     voice_generation_processing: boolean;
   }
