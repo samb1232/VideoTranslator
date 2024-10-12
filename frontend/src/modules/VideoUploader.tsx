@@ -4,6 +4,7 @@ import { TaskData } from "../utils/taskData";
 
 import styles_loading_anim from "./styles/loading_anim.module.css";
 import styles from "./styles/videoUploader.module.css";
+import { SERVER_URL } from "../utils/serverInfo";
 const languages = [
   { value: "", label: "Select language" },
   { value: "ru", label: "Russian" },
@@ -47,7 +48,7 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
       formData.append("lang_from", languageFrom);
       formData.append("lang_to", languageTo);
 
-      await httpClient.post("http://localhost:5000/create_subs", formData, {
+      await httpClient.post(`${SERVER_URL}/create_subs`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -58,6 +59,7 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
     }
 
     setProcessing(false);
+    window.location.reload(); // TODO: Make propper refetch
   };
 
   return (

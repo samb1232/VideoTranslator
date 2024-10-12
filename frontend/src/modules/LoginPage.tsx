@@ -3,6 +3,7 @@ import styles from "./styles/login.module.css";
 import React, { useEffect, useState } from "react";
 import { Form, useNavigate } from "react-router-dom";
 import httpClient from "../utils/httpClient";
+import { SERVER_URL } from "../utils/serverInfo";
 
 function LoginPage() {
   const [username, setUsername] = useState<string>("");
@@ -13,7 +14,7 @@ function LoginPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      const response = await httpClient.post("http://localhost:5000/login", {
+      const response = await httpClient.post(`${SERVER_URL}/login`, {
         username,
         password,
       });
@@ -38,7 +39,7 @@ function LoginPage() {
   useEffect(() => {
     (async () => {
       try {
-        const resp = await httpClient.get("//localhost:5000/@me");
+        const resp = await httpClient.get(`${SERVER_URL}/@me`);
         if (resp.data) {
           navigate("/", { replace: true });
         }

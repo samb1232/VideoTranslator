@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import httpClient from "../utils/httpClient";
 import { TaskData } from "../utils/taskData";
+import { SERVER_URL } from "../utils/serverInfo";
 
 interface VideoPlayerProps {
   taskData: TaskData;
@@ -16,7 +17,7 @@ function VideoPlayer({ taskData }: VideoPlayerProps) {
         const video_filepath = taskData.translated_video_path;
 
         const response = await httpClient.get(
-          "http://localhost:5000/get_video/" + video_filepath,
+          `${SERVER_URL}/get_video/${video_filepath}`,
           {
             responseType: "blob",
           }

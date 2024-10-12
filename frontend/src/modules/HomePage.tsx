@@ -6,6 +6,7 @@ import TaskItem from "./TaskItem";
 import CreateTaskWindow from "./CreateTaskWindow";
 
 import styles from "./styles/home.module.css";
+import { SERVER_URL } from "../utils/serverInfo";
 
 function HomePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -22,13 +23,13 @@ function HomePage() {
   }, []);
 
   const logoutUser = async () => {
-    await httpClient.post("//localhost:5000/logout");
+    await httpClient.post(`${SERVER_URL}/logout`);
     navigate("/login", { replace: true });
   };
 
   const getUserInfo = async () => {
     try {
-      const resp = await httpClient.get("//localhost:5000/@me");
+      const resp = await httpClient.get(`${SERVER_URL}/@me`);
       if (resp.data) {
         setUser(resp.data);
       } else {
@@ -42,7 +43,7 @@ function HomePage() {
   const fetchTasks = async () => {
     try {
       const response = await httpClient.get<ApiResponse>(
-        "http://localhost:5000/get_all_tasks"
+        `${SERVER_URL}/get_all_tasks`
       );
       if (response.data.status === "success") {
         setTasks(response.data.tasks);

@@ -2,6 +2,7 @@ import { useState } from "react";
 import httpClient from "../utils/httpClient";
 import styles from "./styles/modal.module.css";
 import { useNavigate } from "react-router";
+import { SERVER_URL } from "../utils/serverInfo";
 interface CreateTaskWindowProps {
   closeWindowFunc: () => void;
 }
@@ -17,7 +18,7 @@ function CreateTaskWindow({ closeWindowFunc }: CreateTaskWindowProps) {
     try {
       if (newTaskTitle.trim() === "") return;
 
-      const response = await httpClient.post("//localhost:5000/create_task", {
+      const response = await httpClient.post(`${SERVER_URL}/create_task`, {
         title: newTaskTitle,
       });
 

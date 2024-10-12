@@ -4,6 +4,7 @@ import httpClient from "../utils/httpClient";
 
 import styles from "./styles/subtitleEditor.module.css";
 import styles_loading_anim from "./styles/loading_anim.module.css";
+import { SERVER_URL } from "../utils/serverInfo";
 
 interface Subtitle {
   id: number;
@@ -29,7 +30,7 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
     const fetchSubtitles = async () => {
       try {
         const response = await httpClient.get(
-          `//localhost:5000/get_json_subs/${taskId}`
+          `${SERVER_URL}/get_json_subs/${taskId}`
         );
         if (response.data.status === "success") {
           setSubtitles(response.data.json_subs);
@@ -59,11 +60,11 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
     setProcessing(true);
     try {
       const response = await httpClient.post(
-        `//localhost:5000/generate_voice/${taskId}`,
+        `${SERVER_URL}/generate_voice/${taskId}`,
         { json_subs: subtitles }
       );
       if (response.data.status === "success") {
-        // refetch data from server
+        window.location.reload(); // TODO: Make propper refetch
       } else {
         setError(response.data.message);
       }

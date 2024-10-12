@@ -12,10 +12,11 @@ import SubtitleEditor from "./SubtitlesEditor";
 import VideoPlayer from "./VideoPlayer";
 
 import styles from "./styles/taskPage.module.css";
+import { SERVER_URL } from "../utils/serverInfo";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const taskId = params.taskId;
-  const response = await httpClient.get("//localhost:5000/get_task/" + taskId);
+  const response = await httpClient.get(`${SERVER_URL}/get_task/${taskId}`);
   if (response.data.status == "success") {
     const taskInfo = response.data.task_info as TaskData;
     console.log(taskInfo);
@@ -35,7 +36,7 @@ export default function TaskPage() {
       if (!window.confirm("Are you sure you want to delete this task?")) return;
 
       const response = await httpClient.delete(
-        "//localhost:5000/delete_task/" + taskInfo.id
+        `${SERVER_URL}/delete_task/${taskInfo.id}`
       );
       if (response.data.status === "success") {
         navigate("/");
@@ -64,13 +65,14 @@ export default function TaskPage() {
           <h1 className={styles.subs_editor_header}>Subtitle Editor</h1>
           <div className={styles.subs_and_video_div}>
             <SubtitleEditor taskData={taskInfo} />
-            {taskInfo.translated_video_path == "" ? (
-              <div>Video result displays after generating voice</div>
-            ) : (
-              <div className={styles.video_player_div}>
+
+            <div className={styles.video_player_div}>
+              {taskInfo.translated_video_path == "" ? (
+                <>Video result displays after generating voice</>
+              ) : (
                 <VideoPlayer taskData={taskInfo} />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </>
       )}
