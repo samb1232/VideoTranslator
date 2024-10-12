@@ -1,8 +1,8 @@
-from frontend import create_app, db
-from frontend.models import User
+
+from backend.database.models import User, db
+from backend.web_server import app
 
 def add_user(username, password):
-    app = create_app()
     with app.app_context():
         new_user = User(username=username, password=password)
         db.session.add(new_user)

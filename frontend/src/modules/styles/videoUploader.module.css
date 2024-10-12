@@ -1,0 +1,48 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 50px auto; 
+  }
+  
+  .title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .input {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    
+    border: 2px dashed #ccc;
+  }
+  
+  
+  .languageSelectors {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .label {
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  
+  .select {
+    padding: 8px;
+    font-size: 16px;
+    margin: 0px 10px 10px 0px;
+  }
+
+  .error_message_div {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
