@@ -42,13 +42,14 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
     }
 
     try {
+      setErrorMessage("");
       const formData = new FormData();
       formData.append("task_id", taskData.id);
       formData.append("video_file", videoFile);
       formData.append("lang_from", languageFrom);
       formData.append("lang_to", languageTo);
 
-      await httpClient.post(`${SERVER_URL}/create_subs`, formData, {
+      await httpClient.post(`${SERVER_URL}/api/create_subs`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

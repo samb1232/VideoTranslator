@@ -1,4 +1,6 @@
 from datetime import datetime
+import json
+import os
 from typing import List
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -126,3 +128,35 @@ def reset_all_task_processing():
         db.session.rollback()
         raise e
     
+
+def add_users_from_json(json_filepath):
+    if not os.path.exists(json_filepath): 
+        return
+    try:
+        with open(json_filepath, 'r') as json_file:
+            users_data = json.load(json_file)
+    except  FileNotFoundError:
+        print(f"File {json_filepath} not found")
+        return
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON file: {e}")
+        return
+
+    try:
+        for user in users_data:
+            if User.query.filter_by(username=user["username"]).first() is None:
+                new_user = User(username=user["username"], password=user["password"])
+                db.session.add(new_user)
+    except KeyError as e:
+        print(f"Missing key in JSON data: {e}")
+        return
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return
+    
+    try:
+        db.session.commit()
+    except Exception as e:
+        print(f"Error committing to database: {e}")
+        db.session.rollback()
+

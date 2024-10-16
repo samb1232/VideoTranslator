@@ -1,10 +1,41 @@
-version: '3.8'
+networks:
+  vid_trans_network:
 
 services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=mysql+pymysql://user123:U4yfJPqa@db:3306/flask_db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+      - frontend
+    networks:
+      - vid_trans_network
+  
+  
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    deploy:
+      resources:
+        limits:
+          memory: 12G  
+    environment:
+      - VITE_API_URL=http://backend:5000
+    networks:
+      - vid_trans_network
+  
+  
   db:
     image: mysql:5.7
-    volumes:
-      - mysql_data:/var/lib/mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ajgkRpo1
@@ -13,9 +44,34 @@ services:
       MYSQL_PASSWORD: U4yfJPqa
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     ports:
       - "3306:3306"
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+        - mysql_data:/var/lib/mysql
+    networks:
+      - vid_trans_network
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - vid_trans_network
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+    depends_on:
+      - backend
+      - frontend
+      - redis
+      - db
+    networks:
+      - vid_trans_network
 
 volumes:
   mysql_data:

@@ -17,11 +17,13 @@ function VideoPlayer({ taskData }: VideoPlayerProps) {
         const video_filepath = taskData.translated_video_path;
 
         const response = await httpClient.get(
-          `${SERVER_URL}/get_video/${video_filepath}`,
+          `${SERVER_URL}/api/get_video/${video_filepath}`,
           {
             responseType: "blob",
           }
         );
+        console.log(response);
+
         const videoUrl = URL.createObjectURL(response.data);
         setVideoSrc(videoUrl);
       } catch (error) {

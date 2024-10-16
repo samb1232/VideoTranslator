@@ -30,7 +30,7 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
     const fetchSubtitles = async () => {
       try {
         const response = await httpClient.get(
-          `${SERVER_URL}/get_json_subs/${taskId}`
+          `${SERVER_URL}/api/get_json_subs/${taskId}`
         );
         if (response.data.status === "success") {
           setSubtitles(response.data.json_subs);
@@ -60,7 +60,7 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
     setProcessing(true);
     try {
       const response = await httpClient.post(
-        `${SERVER_URL}/generate_voice/${taskId}`,
+        `${SERVER_URL}/api/generate_voice/${taskId}`,
         { json_subs: subtitles }
       );
       if (response.data.status === "success") {

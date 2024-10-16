@@ -17,7 +17,7 @@ class VoiceGenerator:
     def __init__(self, language: str = None) -> None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print("device:" + device)
-        self.tts = TTS(model_name=self.PATH_TO_MODEL).to(device)
+        self.tts = TTS(model_name=self.PATH_TO_MODEL,progress_bar=False).to(device)
         self.lang = language
 
         os.makedirs(self.BASE_TEMP_FOLDER_NAME, exist_ok=True)

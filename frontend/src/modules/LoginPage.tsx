@@ -14,7 +14,7 @@ function LoginPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      const response = await httpClient.post(`${SERVER_URL}/login`, {
+      const response = await httpClient.post(`${SERVER_URL}/api/login_user`, {
         username,
         password,
       });
@@ -39,7 +39,7 @@ function LoginPage() {
   useEffect(() => {
     (async () => {
       try {
-        const resp = await httpClient.get(`${SERVER_URL}/@me`);
+        const resp = await httpClient.get(`${SERVER_URL}/api/@me`);
         if (resp.data) {
           navigate("/", { replace: true });
         }

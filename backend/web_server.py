@@ -1,5 +1,7 @@
 import os
 import json
+import concurrent
+from threading import Thread
 from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 from flask_session import Session
@@ -12,6 +14,7 @@ from config import ConfigWeb
 from database.models import Task, User, db
 
 app = Flask(__name__)
+app.static_folder = "/usr/share/nginx/html/static/"
 app.config.from_object(ConfigWeb)
 CORS(app, supports_credentials=True)
 
@@ -21,6 +24,8 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
     db_operations.reset_all_task_processing()
+    db_operations.add_users_from_json("users.json")
+
 
 @app.route("/@me", methods=["GET"])  
 def get_current_user():
@@ -39,7 +44,7 @@ def get_current_user():
             })
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/login_user', methods=['POST'])
 def login_user():
     request_json = request.json
     username = request_json['username']
@@ -57,15 +62,17 @@ def login_user():
             "id":  user.id,
             "username": user.username
             })
-
     else:
         return jsonify({'message': 'Invalid username or password'}), 401 
 
 
 @app.route("/logout", methods=["POST"])
 def logout_user():
-    session.pop("user_id")
-    return "200"
+    try:
+        session.pop("user_id")
+        return "200"
+    except KeyError:
+        return "404"
 
 
 @app.route("/get_all_tasks",  methods=["GET"])
@@ -113,14 +120,14 @@ def delete_task(id):
 def download_file(filepath):
     if app.config["UPLOAD_FOLDER"] not in filepath:
         return jsonify({'status': 'error', "message":  f"Permission to download file {filepath} denided"}), 403
-    return send_from_directory("../", filepath, as_attachment=True)
+    return send_from_directory("./", filepath, as_attachment=True)
 
 
 @app.route('/get_video/<path:filepath>')
 def get_video(filepath):
     if app.config["UPLOAD_FOLDER"] not in filepath:
         return jsonify({'status': 'error', "message":  f"Permission to download file {filepath} denided"}), 403
-    return send_from_directory("../", filepath)
+    return send_from_directory("./", filepath)
 
 
 @app.route("/get_json_subs/<task_id>",  methods=["GET"])
@@ -205,30 +212,24 @@ def create_subs():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-@app.route("/generate_voice/<task_id>", methods=["POST"])
-def generate_voice(task_id):
-    task = db_operations.get_task_by_id(task_id)
-    if task is None:
-        return jsonify({'status': 'error', 'message': 'Task not found'}), 404
-
-    subs_path = task.json_translated_subs_path
-    if not subs_path:
-        return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
-
+def generate_voice_background(task_id, new_subs):
     try:
-        db_operations.set_task_voice_generation_processing(task_id=task_id, value=True)
-        new_subs = request.json.get('json_subs')
-        if new_subs is None:
-            return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
+        task = db_operations.get_task_by_id(task_id)
+        if task is None:
+            raise Exception('Task not found')
+
+        subs_path = task.json_translated_subs_path
+        if not subs_path:
+            raise Exception('No subs path for this task')
 
         with open(subs_path, "w") as json_file:
             json.dump(new_subs, json_file, indent=4)
 
         task_folder = get_task_folder(task_id)
-        final_audio_filepath = os.path.join(task_folder,  f"{task_id}_audio_{task.lang_to}.wav")
-        final_video_filepath = os.path.join(task_folder,  f"{task_id}_vid_{task.lang_to}.mp4")
+        final_audio_filepath = os.path.join(task_folder, f"{task_id}_audio_{task.lang_to}.wav")
+        final_video_filepath = os.path.join(task_folder, f"{task_id}_vid_{task.lang_to}.mp4")
 
-        voice_generator = VoiceGenerator(task.lang_to) 
+        voice_generator = VoiceGenerator(task.lang_to)
         voice_generator.generate_audio(
             orig_wav_filepath=task.src_audio_path,
             json_subs_filepath=task.json_translated_subs_path,
@@ -246,11 +247,31 @@ def generate_voice(task_id):
         )
     except Exception as e:
         db_operations.set_task_voice_generation_processing(task_id=task_id, value=False)
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        raise e
+    finally:
+        db_operations.set_task_voice_generation_processing(task_id=task_id, value=False)
 
-    db_operations.set_task_voice_generation_processing(task_id=task_id, value=False)
-    return jsonify({'status': 'success'}), 200
+@app.route("/generate_voice/<task_id>", methods=["POST"])
+async def generate_voice(task_id):
+    task = db_operations.get_task_by_id(task_id)
+    if task is None:
+        return jsonify({'status': 'error', 'message': 'Task not found'}), 404
+
+    subs_path = task.json_translated_subs_path
+    if not subs_path:
+        return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
+
+    new_subs = request.json.get('json_subs')
+    if new_subs is None:
+        return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
+
+
+    db_operations.set_task_voice_generation_processing(task_id=task_id, value=True)
+    # Start the voice generation in a background thread
+    generate_voice_background(task_id, new_subs)
+
+    return jsonify({'status': 'processing'}), 202
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(port=5000, host="0.0.0.0", debug=False)

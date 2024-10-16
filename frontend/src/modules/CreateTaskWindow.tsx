@@ -18,7 +18,7 @@ function CreateTaskWindow({ closeWindowFunc }: CreateTaskWindowProps) {
     try {
       if (newTaskTitle.trim() === "") return;
 
-      const response = await httpClient.post(`${SERVER_URL}/create_task`, {
+      const response = await httpClient.post(`${SERVER_URL}/api/create_task`, {
         title: newTaskTitle,
       });
 

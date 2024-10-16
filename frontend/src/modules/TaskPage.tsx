@@ -13,10 +13,11 @@ import VideoPlayer from "./VideoPlayer";
 
 import styles from "./styles/taskPage.module.css";
 import { SERVER_URL } from "../utils/serverInfo";
+import { useEffect } from "react";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const taskId = params.taskId;
-  const response = await httpClient.get(`${SERVER_URL}/get_task/${taskId}`);
+  const response = await httpClient.get(`${SERVER_URL}/api/get_task/${taskId}`);
   if (response.data.status == "success") {
     const taskInfo = response.data.task_info as TaskData;
     console.log(taskInfo);
@@ -31,12 +32,26 @@ export default function TaskPage() {
   const { taskInfo } = useLoaderData() as { taskInfo: TaskData };
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const getUserInfo = async () => {
+      try {
+        const resp = await httpClient.get(`${SERVER_URL}/api/@me`);
+        if (!resp.data) {
+          navigate("/login", { replace: true });
+        }
+      } catch (error) {
+        navigate("/login", { replace: true });
+      }
+    };
+    getUserInfo();
+  });
+
   const deleteTask = async () => {
     try {
       if (!window.confirm("Are you sure you want to delete this task?")) return;
 
       const response = await httpClient.delete(
-        `${SERVER_URL}/delete_task/${taskInfo.id}`
+        `${SERVER_URL}/api/delete_task/${taskInfo.id}`
       );
       if (response.data.status === "success") {
         navigate("/");
