@@ -20,4 +20,4 @@ ENV FLASK_ENV production
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-b", ":5000", "-t 0", "web_server:app"]
+CMD ["gunicorn", "-w 4",  "-b", ":5000", "-t 0", "web_server:app"]
