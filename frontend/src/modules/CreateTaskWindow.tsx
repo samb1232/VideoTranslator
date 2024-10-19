@@ -1,6 +1,7 @@
 import { useState } from "react";
 import httpClient from "../utils/httpClient";
 import styles from "./styles/modal.module.css";
+import styles_err_message from "./styles/error_message.module.css";
 import { useNavigate } from "react-router";
 import { SERVER_URL } from "../utils/serverInfo";
 interface CreateTaskWindowProps {
@@ -18,7 +19,7 @@ function CreateTaskWindow({ closeWindowFunc }: CreateTaskWindowProps) {
     try {
       if (newTaskTitle.trim() === "") return;
 
-      const response = await httpClient.post(`${SERVER_URL}/api/create_task`, {
+      const response = await httpClient.post(`${SERVER_URL}/create_task`, {
         title: newTaskTitle,
       });
 
@@ -40,7 +41,9 @@ function CreateTaskWindow({ closeWindowFunc }: CreateTaskWindowProps) {
   return (
     <div className={styles.modal_overlay}>
       <div className={styles.modal_content}>
-        {error && <div className={styles.error_div}>{error}</div>}
+        {error && (
+          <div className={styles_err_message.error_message_div}>{error}</div>
+        )}
         <h2>Create New Task</h2>
         <form onSubmit={handleCreateTask}>
           <label>

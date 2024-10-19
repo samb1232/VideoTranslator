@@ -38,11 +38,3 @@
     font-size: 16px;
     margin: 0px 10px 10px 0px;
   }
-
-  .error_message_div {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-}

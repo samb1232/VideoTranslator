@@ -23,13 +23,13 @@ function HomePage() {
   }, []);
 
   const logoutUser = async () => {
-    await httpClient.post(`${SERVER_URL}/api/logout`);
+    await httpClient.post(`${SERVER_URL}/logout`);
     navigate("/login", { replace: true });
   };
 
   const getUserInfo = async () => {
     try {
-      const resp = await httpClient.get(`${SERVER_URL}/api/@me`);
+      const resp = await httpClient.get(`${SERVER_URL}/@me`);
       if (resp.data) {
         setUser(resp.data);
       } else {
@@ -43,7 +43,7 @@ function HomePage() {
   const fetchTasks = async () => {
     try {
       const response = await httpClient.get<ApiResponse>(
-        `${SERVER_URL}/api/get_all_tasks`
+        `${SERVER_URL}/get_all_tasks`
       );
       if (response.data.status === "success") {
         setTasks(response.data.tasks);

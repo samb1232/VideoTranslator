@@ -3,8 +3,10 @@ import httpClient from "../utils/httpClient";
 import { TaskData } from "../utils/taskData";
 
 import styles_loading_anim from "./styles/loading_anim.module.css";
+import styles_err_message from "./styles/error_message.module.css";
 import styles from "./styles/videoUploader.module.css";
 import { SERVER_URL } from "../utils/serverInfo";
+
 const languages = [
   { value: "", label: "Select language" },
   { value: "ru", label: "Russian" },
@@ -24,7 +26,7 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
   );
   const [languageFrom, setLanguageFrom] = useState<string>(taskData.lang_from);
   const [languageTo, setLanguageTo] = useState<string>(taskData.lang_to);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -32,42 +34,54 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
     }
   };
 
-  const handleClickButton = async () => {
+  const handleUploadButton = async () => {
     setProcessing(true);
 
     if (!videoFile) {
-      setErrorMessage("No video file selected");
+      setError("No video file selected");
+      setProcessing(false);
+      return;
+    }
+
+    if (videoFile.type != "video/mp4") {
+      setError("Wrong video format. Try mp4.");
       setProcessing(false);
       return;
     }
 
     try {
-      setErrorMessage("");
+      setError("");
       const formData = new FormData();
       formData.append("task_id", taskData.id);
       formData.append("video_file", videoFile);
       formData.append("lang_from", languageFrom);
       formData.append("lang_to", languageTo);
 
-      await httpClient.post(`${SERVER_URL}/api/create_subs`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await httpClient.post(
+        `${SERVER_URL}/create_subs`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      if (response.data.status === "error") {
+        setError(response.data.message);
+      }
+      setProcessing(false);
+      window.location.reload(); // TODO: Make propper refetch
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setProcessing(false);
     }
-
-    setProcessing(false);
-    window.location.reload(); // TODO: Make propper refetch
   };
 
   return (
     <div className={styles.container}>
       <p className={styles.title}>Upload video .mp4</p>
-      {errorMessage != "" && (
-        <div className={styles.error_message_div}>{errorMessage}</div>
+      {error != "" && (
+        <div className={styles_err_message.error_message_div}>{error}</div>
       )}
       <input
         type="file"
@@ -111,7 +125,7 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
         ) : (
           <button
             className={styles_loading_anim.button}
-            onClick={handleClickButton}
+            onClick={handleUploadButton}
             disabled={
               (videoFile == null && !taskData.src_vid_path) ||
               languageFrom == "" ||

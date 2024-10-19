@@ -1,4 +1,5 @@
 import styles from "./styles/login.module.css";
+import styles_err_message from "./styles/error_message.module.css";
 
 import React, { useEffect, useState } from "react";
 import { Form, useNavigate } from "react-router-dom";
@@ -8,18 +9,16 @@ import { SERVER_URL } from "../utils/serverInfo";
 function LoginPage() {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [error, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      const response = await httpClient.post(`${SERVER_URL}/api/login_user`, {
+      const response = await httpClient.post(`${SERVER_URL}/login_user`, {
         username,
         password,
       });
-
-      console.log(response.data);
 
       if (response.status === 200) {
         navigate("/", { replace: true });
@@ -39,7 +38,7 @@ function LoginPage() {
   useEffect(() => {
     (async () => {
       try {
-        const resp = await httpClient.get(`${SERVER_URL}/api/@me`);
+        const resp = await httpClient.get(`${SERVER_URL}/@me`);
         if (resp.data) {
           navigate("/", { replace: true });
         }
@@ -51,8 +50,8 @@ function LoginPage() {
     <div className={styles.login_body}>
       <h1>ExtFo Video Translator</h1>
       <Form className={styles.login_form} onSubmit={handleSubmit}>
-        {errorMessage != "" && (
-          <div className={styles.error_message_div}>{errorMessage}</div>
+        {error != "" && (
+          <div className={styles_err_message.error_message_div}>{error}</div>
         )}
         <label htmlFor="username">Username:</label>
         <input

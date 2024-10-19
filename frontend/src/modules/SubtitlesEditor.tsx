@@ -3,6 +3,7 @@ import { TaskData } from "../utils/taskData";
 import httpClient from "../utils/httpClient";
 
 import styles from "./styles/subtitleEditor.module.css";
+import styles_err_message from "./styles/error_message.module.css";
 import styles_loading_anim from "./styles/loading_anim.module.css";
 import { SERVER_URL } from "../utils/serverInfo";
 
@@ -30,7 +31,7 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
     const fetchSubtitles = async () => {
       try {
         const response = await httpClient.get(
-          `${SERVER_URL}/api/get_json_subs/${taskId}`
+          `${SERVER_URL}/get_json_subs/${taskId}`
         );
         if (response.data.status === "success") {
           setSubtitles(response.data.json_subs);
@@ -60,7 +61,7 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
     setProcessing(true);
     try {
       const response = await httpClient.post(
-        `${SERVER_URL}/api/generate_voice/${taskId}`,
+        `${SERVER_URL}/generate_voice/${taskId}`,
         { json_subs: subtitles }
       );
       if (response.data.status === "success") {
@@ -76,7 +77,7 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
   };
 
   if (error) {
-    return <div>{error}</div>;
+    return <div className={styles_err_message.error_message_div}>{error}</div>;
   }
 
   return (

@@ -17,11 +17,9 @@ import { useEffect } from "react";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const taskId = params.taskId;
-  const response = await httpClient.get(`${SERVER_URL}/api/get_task/${taskId}`);
+  const response = await httpClient.get(`${SERVER_URL}/get_task/${taskId}`);
   if (response.data.status == "success") {
     const taskInfo = response.data.task_info as TaskData;
-    console.log(taskInfo);
-
     return { taskInfo };
   }
 
@@ -35,7 +33,7 @@ export default function TaskPage() {
   useEffect(() => {
     const getUserInfo = async () => {
       try {
-        const resp = await httpClient.get(`${SERVER_URL}/api/@me`);
+        const resp = await httpClient.get(`${SERVER_URL}/@me`);
         if (!resp.data) {
           navigate("/login", { replace: true });
         }
@@ -51,7 +49,7 @@ export default function TaskPage() {
       if (!window.confirm("Are you sure you want to delete this task?")) return;
 
       const response = await httpClient.delete(
-        `${SERVER_URL}/api/delete_task/${taskInfo.id}`
+        `${SERVER_URL}/delete_task/${taskInfo.id}`
       );
       if (response.data.status === "success") {
         navigate("/");
@@ -82,9 +80,7 @@ export default function TaskPage() {
             <SubtitleEditor taskData={taskInfo} />
 
             <div className={styles.video_player_div}>
-              {taskInfo.translated_video_path == "" ? (
-                <>Video result displays after generating voice</>
-              ) : (
+              {taskInfo.translated_video_path != "" && (
                 <VideoPlayer taskData={taskInfo} />
               )}
             </div>
