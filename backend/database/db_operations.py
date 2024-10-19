@@ -3,10 +3,8 @@ import json
 import os
 from typing import List
 from sqlalchemy.exc import SQLAlchemyError
-
-
 from database.models import Task, User, db
-
+import logging
 
 def get_user_by_username(username: str) -> User:
     return User.query.filter_by(username=username).first()
@@ -25,6 +23,8 @@ def get_task_by_id(task_id: str) -> Task:
 
 
 def create_new_task(title: str) -> Task:
+    
+
     new_task = Task(
         title=title,
         last_used=datetime.now(),

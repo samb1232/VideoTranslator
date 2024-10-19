@@ -1,7 +1,6 @@
+import logging
 import os
 import json
-import concurrent
-from threading import Thread
 from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 from flask_session import Session
@@ -14,8 +13,18 @@ from config import ConfigWeb
 from database.models import Task, User, db
 
 app = Flask(__name__)
-app.static_folder = "/usr/share/nginx/html/static/"
 app.config.from_object(ConfigWeb)
+
+logging.basicConfig(
+        level=app.config['LOGGING_LEVEL'],
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(app.config['LOGGING_FILE']),
+            logging.StreamHandler()
+        ]
+    )
+
+
 CORS(app, supports_credentials=True)
 
 server_session = Session(app)
@@ -31,17 +40,20 @@ with app.app_context():
 def get_current_user():
     try:
         user_id = session["user_id"]
-    except KeyError as e:
+    except KeyError:
         user_id = None
         
     if not user_id:
-        return jsonify({"error": "User not logged in"}), 401
+        return jsonify({'status': 'error', "message": "User not logged in"}), 401
 
     user: User = db_operations.get_user_by_id(user_id)
+    if user is None:
+        return jsonify({'status': 'error', 'message': "User not found"}), 404
     return jsonify({
-            'id': user.id,
-            "username": user.username,
-            })
+        'status': 'success',
+        'id': user.id,
+        "username": user.username,
+        }), 200
 
 
 @app.route('/login_user', methods=['POST'])
@@ -51,7 +63,7 @@ def login_user():
     password = request_json['password']
 
     if not username or not password:
-        return jsonify({'message': 'Username and password are required'}), 400
+        return jsonify({'status': 'error', 'message': 'Username and password are required'}), 400
     
     user: User = db_operations.get_user_by_username(username)
 
@@ -59,20 +71,21 @@ def login_user():
         session["user_id"] = user.id
 
         return jsonify({
+            'status': 'success', 
             "id":  user.id,
             "username": user.username
-            })
+            }), 200
     else:
-        return jsonify({'message': 'Invalid username or password'}), 401 
+        return jsonify({'status': 'error', 'message': 'Invalid username or password'}), 401 
 
 
 @app.route("/logout", methods=["POST"])
 def logout_user():
     try:
         session.pop("user_id")
-        return "200"
+        return jsonify({'status': 'success'}), 200
     except KeyError:
-        return "404"
+        return jsonify({'status': 'error', "message": "User already  logged out"}), 404
 
 
 @app.route("/get_all_tasks",  methods=["GET"])
@@ -86,8 +99,9 @@ def get_all_tasks():
             "last_used":  task.last_used
         }
         tasks.append(task_dict)
-    # reverse tasks list
-    tasks.reverse()
+    # reverse tasks list and crop fisrt 100 tasks
+    tasks = tasks[::-1][:100]
+
     return jsonify({'status': 'success', "tasks":  tasks}), 200
 
 
@@ -102,6 +116,7 @@ def get_task(id):
 
 @app.route("/create_task",  methods=["POST"])
 def  create_task():
+    logging.info(f"Creating new task: {title}")
     request_json = request.json
     title = request_json['title']
     task = db_operations.create_new_task(title=title)
@@ -156,9 +171,9 @@ def create_subs():
         required_keys = {'task_id', 'lang_from', 'lang_to'}
         if not required_keys.issubset(request.values) or 'video_file' not in request.files:
             return jsonify({'status': 'error', 'message': 'Invalid request content'}), 400
-
-        video_file = request.files['video_file']
+        
         task_id = request.values["task_id"]
+        video_file = request.files['video_file']
         lang_from = request.values["lang_from"]
         lang_to = request.values["lang_to"]
 
@@ -170,9 +185,7 @@ def create_subs():
         
         task_folder = get_task_folder(task_id)
 
-        subs_generator = SubsGenerator(
-            src_lang=lang_from,
-        )
+        subs_generator = SubsGenerator(src_lang=lang_from)
         subs_generator.transcript(
             video_file_path=vid_filepath,
             output_dir=task_folder
@@ -212,7 +225,23 @@ def create_subs():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-def generate_voice_background(task_id, new_subs):
+@app.route("/generate_voice/<task_id>", methods=["POST"])
+def generate_voice(task_id):
+
+    new_subs = request.json.get('json_subs')
+    if new_subs is None:
+        return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
+    
+    task = db_operations.get_task_by_id(task_id)
+    if task is None:
+        return jsonify({'status': 'error', 'message': 'Task not found'}), 404
+
+    subs_path = task.json_translated_subs_path
+    if not subs_path:
+        return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
+    
+    # START GENERATING VOICE
+    db_operations.set_task_voice_generation_processing(task_id=task_id, value=True)
     try:
         task = db_operations.get_task_by_id(task_id)
         if task is None:
@@ -247,30 +276,11 @@ def generate_voice_background(task_id, new_subs):
         )
     except Exception as e:
         db_operations.set_task_voice_generation_processing(task_id=task_id, value=False)
-        raise e
+        return jsonify({'status': 'error', 'message': str(e)}), 500
     finally:
         db_operations.set_task_voice_generation_processing(task_id=task_id, value=False)
 
-@app.route("/generate_voice/<task_id>", methods=["POST"])
-async def generate_voice(task_id):
-    task = db_operations.get_task_by_id(task_id)
-    if task is None:
-        return jsonify({'status': 'error', 'message': 'Task not found'}), 404
-
-    subs_path = task.json_translated_subs_path
-    if not subs_path:
-        return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
-
-    new_subs = request.json.get('json_subs')
-    if new_subs is None:
-        return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
-
-
-    db_operations.set_task_voice_generation_processing(task_id=task_id, value=True)
-    # Start the voice generation in a background thread
-    generate_voice_background(task_id, new_subs)
-
-    return jsonify({'status': 'processing'}), 202
+    return jsonify({'status': 'success'}), 202
 
 
 if __name__ == '__main__':
