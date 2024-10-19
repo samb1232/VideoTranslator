@@ -116,9 +116,8 @@ def get_task(id):
 
 @app.route("/create_task",  methods=["POST"])
 def  create_task():
+    title = request.json['title']
     logging.info(f"Creating new task: {title}")
-    request_json = request.json
-    title = request_json['title']
     task = db_operations.create_new_task(title=title)
     return jsonify({'status': 'success', "task_id":  task.id}), 200
 
@@ -128,7 +127,7 @@ def delete_task(id):
     is_success = db_operations.delete_task_by_id(id)
     if is_success:
         return jsonify({'status': 'success'}), 200
-    return jsonify({'status': 'error', "message":  "Task not found"}),  404
+    return jsonify({'status': 'error', "message": "Task not found"}),  404
     
 
 @app.route('/download/<path:filepath>')
@@ -177,10 +176,11 @@ def create_subs():
         lang_from = request.values["lang_from"]
         lang_to = request.values["lang_to"]
 
-        db_operations.set_task_subs_generation_processing(task_id=task_id, value=True)
-
         if video_file.filename.split(".")[-1] != "mp4":
             return jsonify({'status': 'error', 'message': 'Invalid video file extension'}), 400
+        
+        db_operations.set_task_subs_generation_processing(task_id=task_id, value=True)
+
         vid_filepath = save_file(video_file, "mp4", task_id)
         
         task_folder = get_task_folder(task_id)
