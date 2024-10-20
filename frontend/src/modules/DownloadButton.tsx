@@ -13,8 +13,10 @@ interface DownloadButtonProps {
 function DownloadButton({ filepath, title }: DownloadButtonProps) {
   const [error, setError] = useState("");
   const [processing, setProcessing] = useState<boolean>(false);
+
   const handleDownload = async () => {
     try {
+      setError("");
       setProcessing(true);
       const response = await httpClient.get(
         `${SERVER_URL}/download/${filepath}`,
@@ -38,15 +40,15 @@ function DownloadButton({ filepath, title }: DownloadButtonProps) {
 
   return (
     <div className={styles_loading_anim.loader_container}>
-      {error != "" && (
-        <div className={styles_err_message.error_message_div}>{error}</div>
-      )}
       {processing ? (
         <div className={styles_loading_anim.loader}></div>
       ) : (
         <button className={styles.button} onClick={handleDownload}>
           {title}
         </button>
+      )}
+      {error != "" && (
+        <div className={styles_err_message.error_message_div}>{error}</div>
       )}
     </div>
   );

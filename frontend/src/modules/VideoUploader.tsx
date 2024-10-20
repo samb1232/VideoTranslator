@@ -36,6 +36,7 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
 
   const handleUploadButton = async () => {
     setProcessing(true);
+    setError("");
 
     if (!videoFile) {
       setError("No video file selected");
