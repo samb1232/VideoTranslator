@@ -4,7 +4,6 @@ import os
 from typing import List
 from sqlalchemy.exc import SQLAlchemyError
 from database.models import Task, User, db
-import logging
 
 def get_user_by_username(username: str) -> User:
     return User.query.filter_by(username=username).first()

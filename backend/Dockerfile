@@ -14,10 +14,10 @@ COPY ./modules/tts_models/tts_models--multilingual--multi-dataset--xtts_v2 /root
 COPY ./database ./database
 COPY ./modules ./modules
 COPY ./resources ./resources
-COPY ./config.py ./web_server.py ./users.json ./
+COPY ./config.py ./app.py ./routes.py ./workers.py ./flask_app.py ./users.json  ./
 
 ENV FLASK_ENV production
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-w 4",  "-b", ":5000", "-t 0", "web_server:app"]
+CMD ["gunicorn", "-w 1",  "-b", ":5000", "-t 0", "app:app"]
