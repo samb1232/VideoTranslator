@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TaskData } from "../utils/taskData";
+import { TaskData, TaskStatus } from "../utils/taskData";
 import httpClient from "../utils/httpClient";
 
 import styles from "./styles/subtitleEditor.module.css";
@@ -22,8 +22,8 @@ interface SubtitleEditorProps {
 const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [processing, setProcessing] = useState<boolean>(
-    taskData.voice_generation_processing
+  const [processStatus, setProcessStatus] = useState<string>(
+    taskData.voice_generation_status
   );
   const taskId = taskData.id;
 
@@ -58,22 +58,21 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
   };
 
   const handleGenerateVoice = async () => {
-    setProcessing(true);
+    setProcessStatus(TaskStatus.queued);
     try {
       const response = await httpClient.post(
         `${SERVER_URL}/generate_voice/${taskId}`,
         { json_subs: subtitles }
       );
       if (response.data.status === "success") {
-        window.location.reload(); // TODO: Make propper refetch
+        // TODO: Make propper refetch
       } else {
         setError(response.data.message);
       }
     } catch (error) {
       setError("Error uploading subtitles and generating voice");
-      setProcessing(false);
+      setProcessStatus(TaskStatus.idle);
     }
-    setProcessing(false);
   };
 
   if (error) {
@@ -128,13 +127,19 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
         ))}
       </div>
       <div className={styles_loading_anim.loader_container}>
-        {processing ? (
-          <div className={styles_loading_anim.loader}></div>
+        {processStatus != TaskStatus.idle ? (
+          <>
+            <div>Status: {processStatus}</div>
+            <div className={styles_loading_anim.loader}></div>
+          </>
         ) : (
           <button
             className={styles_loading_anim.button}
             onClick={handleGenerateVoice}
-            disabled={!taskData.json_translated_subs_path || processing}
+            disabled={
+              !taskData.json_translated_subs_path ||
+              processStatus != TaskStatus.idle
+            }
           >
             Generate voice
           </button>

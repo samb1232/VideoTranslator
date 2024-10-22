@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import httpClient from "../utils/httpClient";
-import { TaskData } from "../utils/taskData";
+import { TaskData, TaskStatus } from "../utils/taskData";
 
 import styles_loading_anim from "./styles/loading_anim.module.css";
 import styles_err_message from "./styles/error_message.module.css";
@@ -21,8 +21,8 @@ interface VideoUploaderProps {
 
 export default function VideoUploader({ taskData }: VideoUploaderProps) {
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [processing, setProcessing] = useState<boolean>(
-    taskData.subs_generation_processing
+  const [processStatus, setProcessStatus] = useState<string>(
+    taskData.subs_generation_status
   );
   const [languageFrom, setLanguageFrom] = useState<string>(taskData.lang_from);
   const [languageTo, setLanguageTo] = useState<string>(taskData.lang_to);
@@ -35,18 +35,18 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
   };
 
   const handleUploadButton = async () => {
-    setProcessing(true);
+    setProcessStatus(TaskStatus.queued);
     setError("");
 
     if (!videoFile) {
       setError("No video file selected");
-      setProcessing(false);
+      setProcessStatus(TaskStatus.idle);
       return;
     }
 
     if (videoFile.type != "video/mp4") {
       setError("Wrong video format. Try mp4.");
-      setProcessing(false);
+      setProcessStatus(TaskStatus.idle);
       return;
     }
 
@@ -70,11 +70,10 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
       if (response.data.status === "error") {
         setError(response.data.message);
       }
-      setProcessing(false);
-      window.location.reload(); // TODO: Make propper refetch
+      // TODO: Make propper refetch
     } catch (error) {
-      console.error(error);
-      setProcessing(false);
+      setError(error as string);
+      setProcessStatus(TaskStatus.idle);
     }
   };
 
@@ -121,17 +120,20 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
         </label>
       </div>
       <div className={styles_loading_anim.loader_container}>
-        {processing ? (
-          <div className={styles_loading_anim.loader}></div>
+        {processStatus != TaskStatus.idle ? (
+          <>
+            <div>Status: {processStatus}</div>
+            <div className={styles_loading_anim.loader}></div>
+          </>
         ) : (
           <button
             className={styles_loading_anim.button}
             onClick={handleUploadButton}
             disabled={
-              (videoFile == null && !taskData.src_vid_path) ||
+              videoFile == null ||
               languageFrom == "" ||
               languageTo == "" ||
-              processing
+              processStatus != TaskStatus.idle
             }
           >
             Create subtitles

@@ -3,6 +3,7 @@ import json
 import os
 from typing import List
 from sqlalchemy.exc import SQLAlchemyError
+from modules.utilities.task_status_enum import TaskStatus
 from database.models import Task, User, db
 
 def get_user_by_username(username: str) -> User:
@@ -22,8 +23,6 @@ def get_task_by_id(task_id: str) -> Task:
 
 
 def create_new_task(title: str) -> Task:
-    
-
     new_task = Task(
         title=title,
         last_used=datetime.now(),
@@ -43,11 +42,11 @@ def delete_task_by_id(task_id: str) -> bool:
     return True
 
 
-def set_task_subs_generation_processing(task_id: str, value: bool):
+def set_task_subs_generation_status(task_id: str, status: TaskStatus):
     task = get_task_by_id(task_id)
     if task is None:
         raise ValueError(f"Task with id {task_id} not found")
-    task.subs_generation_processing = value
+    task.subs_generation_status = status.value
     task.last_used=datetime.now()
     try:
         db.session.commit()
@@ -55,11 +54,12 @@ def set_task_subs_generation_processing(task_id: str, value: bool):
         db.session.rollback()
         raise e
     
-def set_task_voice_generation_processing(task_id: str, value: bool):
+    
+def set_task_voice_generation_status(task_id: str, status: TaskStatus):
     task = get_task_by_id(task_id)
     if task is None:
         raise ValueError(f"Task with id {task_id} not found")
-    task.voice_generation_processing = value
+    task.voice_generation_status = status.value
     task.last_used=datetime.now()
     try:
         db.session.commit()
@@ -89,7 +89,7 @@ def update_task_after_subs_created(
     task.srt_translated_subs_path = srt_translated_subs_path
     task.json_translated_subs_path = json_translated_subs_path
     task.last_used=datetime.now()
-    task.subs_generation_processing=False
+    task.subs_generation_status=TaskStatus.idle.value
     try:
         db.session.commit()
     except SQLAlchemyError as e:
@@ -108,7 +108,7 @@ def update_task_after_voice_generated(
     task.translated_audio_path = translated_audio_path
     task.translated_video_path = translated_video_path
     task.last_used=datetime.now()
-    task.subs_generation_processing=False
+    task.voice_generation_status=TaskStatus.idle.value
     try:
         db.session.commit()
     except SQLAlchemyError as e:
@@ -119,8 +119,8 @@ def update_task_after_voice_generated(
 def reset_all_task_processing():
     tasks = Task.query.all()
     for task in tasks:
-        task.subs_generation_processing = False
-        task.voice_generation_processing = False
+        task.subs_generation_status = TaskStatus.idle.value
+        task.voice_generation_status = TaskStatus.idle.value
     try:
         db.session.commit()
     except SQLAlchemyError as e:
@@ -140,7 +140,6 @@ def add_users_from_json(json_filepath):
     except json.JSONDecodeError as e:
         print(f"Error parsing JSON file: {e}")
         return
-
     try:
         for user in users_data:
             if User.query.filter_by(username=user["username"]).first() is None:
@@ -152,7 +151,6 @@ def add_users_from_json(json_filepath):
     except Exception as e:
         print(f"An error occurred: {e}")
         return
-    
     try:
         db.session.commit()
     except Exception as e:

@@ -1,10 +1,10 @@
 import logging
 from flask import jsonify, request, send_from_directory, session
+from modules.utilities.task_status_enum import TaskStatus
 from database import db_operations
 from database.models import Task, User
 from modules.utilities.file_utils import save_file
 import json
-import os
 from workers import SubsCreatorQueueItem, VoiceGeneratorQueueItem, subs_queue, voice_queue
 
 def register_routes(app):
@@ -138,9 +138,7 @@ def register_routes(app):
 
             if video_file.filename.split(".")[-1] != "mp4":
                 return jsonify({'status': 'error', 'message': 'Invalid video file extension'}), 400
-
-            db_operations.set_task_subs_generation_processing(task_id=task_id, value=True)
-
+            
             vid_filepath = save_file(video_file, "mp4", task_id)
 
             subs_task_item = SubsCreatorQueueItem(
@@ -149,44 +147,47 @@ def register_routes(app):
                 lang_from=lang_from,
                 lang_to=lang_to
             )
-
             subs_queue.put(subs_task_item)
-            # TODO: изменить статус задачи на "в очереди"
+            db_operations.set_task_subs_generation_status(task_id=task_id, status=TaskStatus.queued)
 
-            return  jsonify({'status': 'success'}), 200
+            return  jsonify({'status': 'success'}), 202
         except Exception as e:
-            print(e)
-            db_operations.set_task_subs_generation_processing(task_id=task_id, value=False)
+            logging.error(str(e))
+            db_operations.set_task_subs_generation_status(task_id=task_id, status=TaskStatus.idle)
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
     @app.route("/generate_voice/<task_id>", methods=["POST"])
     def generate_voice(task_id):
-        new_subs = request.json.get('json_subs')
-        if new_subs is None:
-            return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
+        try:
+            new_subs = request.json.get('json_subs')
+            if new_subs is None:
+                return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
 
-        task = db_operations.get_task_by_id(task_id)
-        if task is None:
-            return jsonify({'status': 'error', 'message': 'Task not found'}), 404
+            task = db_operations.get_task_by_id(task_id)
+            if task is None:
+                return jsonify({'status': 'error', 'message': 'Task not found'}), 404
 
-        subs_path = task.json_translated_subs_path
-        if not subs_path:
-            return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
+            subs_path = task.json_translated_subs_path
+            if not subs_path:
+                return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
 
+            with open(subs_path, "w") as json_file:
+                json.dump(new_subs, json_file, indent=4)
 
-        with open(subs_path, "w") as json_file:
-            json.dump(new_subs, json_file, indent=4)
+            voice_task_item = VoiceGeneratorQueueItem(
+                task_id=task_id,
+                src_audio_path=task.src_audio_path,
+                src_video_path=task.src_vid_path,
+                json_subs_path=task.json_translated_subs_path,
+                lang_to=task.lang_to
+                )
 
-        db_operations.set_task_voice_generation_processing(task_id=task_id, value=True)
-
-        voice_task_item = VoiceGeneratorQueueItem(
-            task_id=task_id,
-            src_audio_path=task.src_audio_path,
-            src_video_path=task.src_vid_path,
-            json_subs_path=task.json_translated_subs_path,
-            lang_to=task.lang_to
-            )
-
-        voice_queue.put(voice_task_item)
+            voice_queue.put(voice_task_item)
+            db_operations.set_task_voice_generation_status(task_id=task_id, status=TaskStatus.queued)
+        except Exception as e:
+            err_message = str(e)
+            logging.error(err_message)
+            db_operations.set_task_voice_generation_status(task_id=task_id, status=TaskStatus.idle)
+            return jsonify({'status': 'error', 'message': err_message}), 500
 
         return jsonify({'status': 'success'}), 202

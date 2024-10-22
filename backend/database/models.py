@@ -1,6 +1,8 @@
 from uuid import uuid4
 from flask_sqlalchemy import SQLAlchemy
 
+from modules.utilities.task_status_enum import TaskStatus
+
 db = SQLAlchemy()
 
 def get_uuid():
@@ -29,8 +31,8 @@ class Task(db.Model):
     json_translated_subs_path = db.Column(db.Text, default='', nullable=False)
     translated_audio_path = db.Column(db.Text, default='', nullable=False)
     translated_video_path = db.Column(db.Text, default='', nullable=False)
-    subs_generation_processing = db.Column(db.Boolean, default=False, nullable=False)
-    voice_generation_processing = db.Column(db.Boolean, default=False, nullable=False)
+    subs_generation_status = db.Column(db.Text, default=TaskStatus.idle.value, nullable=False)
+    voice_generation_status = db.Column(db.Text, default=TaskStatus.idle.value, nullable=False)
 
 
     def to_json(self):
@@ -48,8 +50,8 @@ class Task(db.Model):
             'json_translated_subs_path': self.json_translated_subs_path,
             'translated_audio_path': self.translated_audio_path,
             'translated_video_path': self.translated_video_path,
-            'subs_generation_processing': self.subs_generation_processing,
-            'voice_generation_processing': self.voice_generation_processing,
+            'subs_generation_status': self.subs_generation_status,
+            'voice_generation_status': self.voice_generation_status,
         }
 
     

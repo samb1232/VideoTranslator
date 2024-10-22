@@ -2,6 +2,7 @@ import logging
 import queue
 import threading
 import os
+from modules.utilities.task_status_enum import TaskStatus
 from modules.subs_generator import SubsGenerator
 from modules.subs_translator import SubsTranslator, Translators
 from modules.voice_generator import VoiceGenerator
@@ -50,6 +51,8 @@ def subs_worker():
                 continue
 
             try:
+                with app.app_context():
+                    db_operations.set_task_subs_generation_status(task_id=task_id,  status=TaskStatus.processing)
                 create_subs_task(task_id, vid_filepath, lang_from, lang_to)
             except Exception as e:
                 logging.error("Error in subs worker: " + str(e))
@@ -74,7 +77,10 @@ def voice_worker():
             lang_to = task.lang_to
 
             try:
+                with app.app_context():
+                    db_operations.set_task_voice_generation_status(task_id=task_id,  status=TaskStatus.processing)
                 generate_voice_task(task_id, src_audio_path, src_video_path, json_subs_path, lang_to)
+                
             except Exception as e:
                 logging.error("Error in voice worker: " + str(e))
             finally:
@@ -91,6 +97,14 @@ def start_workers():
 
 
 def create_subs_task(task_id: str, vid_filepath: str, lang_from: str, lang_to: str):
+    with app.app_context():
+        task = db_operations.get_task_by_id(task_id)
+    task_exists = task is not None
+    files_exists = os.path.exists(vid_filepath)
+
+    if not task_exists or not files_exists:
+        return
+
     task_folder = get_task_folder(task_id)
 
     subs_generator = SubsGenerator(src_lang=lang_from)

@@ -12,6 +12,12 @@ export interface TaskData {
     json_translated_subs_path: string;
     translated_audio_path: string;
     translated_video_path: string;
-    subs_generation_processing: boolean;
-    voice_generation_processing: boolean;
+    subs_generation_status: string;
+    voice_generation_status: string;
+  }
+
+  export enum TaskStatus {
+    idle = "Idle",
+    queued = "Queued",
+    processing =  "Processing",
   }
