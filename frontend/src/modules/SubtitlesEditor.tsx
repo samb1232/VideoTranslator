@@ -66,7 +66,6 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
         `${SERVER_URL}/save_subs/${taskId}`,
         { json_subs: subtitles }
       );
-      console.log("Subs updated", response.data);
 
       if (response.data.status == "success") {
         setWrongSubsFormat(false);
