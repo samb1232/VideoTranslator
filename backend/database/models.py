@@ -19,9 +19,12 @@ class User(db.Model):
 
 class Task(db.Model):
     id = db.Column(db.String(32), unique=True, primary_key=True, default=get_uuid)
+    number_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
     title = db.Column(db.Text, nullable=False)
     creation_date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     last_used = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+
     lang_from = db.Column(db.String(3), default='', nullable=False)
     lang_to = db.Column(db.String(3), default='', nullable=False)
     src_vid_path = db.Column(db.Text, default='', nullable=False)
@@ -34,10 +37,17 @@ class Task(db.Model):
     subs_generation_status = db.Column(db.Text, default=TaskStatus.idle.value, nullable=False)
     voice_generation_status = db.Column(db.Text, default=TaskStatus.idle.value, nullable=False)
 
+    creator_username = db.Column(db.Text, default='', nullable=False)
+    yt_channel = db.Column(db.Text, default='', nullable=False)
+    yt_name = db.Column(db.Text, default='', nullable=False)
+    yt_orig_url = db.Column(db.Text, default='', nullable=False)
+    yt_our_url = db.Column(db.Text, default='', nullable=False)
+
 
     def to_json(self):
         return {
             'id': self.id,
+            'number_id': self.number_id,
             'title': self.title,
             'creation_date': self.creation_date.isoformat() if self.creation_date else None,
             'last_used': self.last_used.isoformat() if self.last_used else None,
@@ -52,6 +62,11 @@ class Task(db.Model):
             'translated_video_path': self.translated_video_path,
             'subs_generation_status': self.subs_generation_status,
             'voice_generation_status': self.voice_generation_status,
+            'creator_username': self.creator_username,
+            'yt_channel': self.yt_channel,
+            'yt_name': self.yt_name,
+            'yt_orig_url': self.yt_orig_url,
+            'yt_our_url': self.yt_our_url,
         }
 
     

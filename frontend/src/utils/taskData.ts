@@ -1,5 +1,6 @@
 export interface TaskData {
     id: string;
+    number_id: number;
     title: string;
     creation_date: string;
     last_used: string;
@@ -14,6 +15,11 @@ export interface TaskData {
     translated_video_path: string;
     subs_generation_status: string;
     voice_generation_status: string;
+    creator_username: string;
+    yt_channel: string;
+    yt_name: string;
+    yt_orig_url: string;
+    yt_our_url: string;
   }
 
   export enum TaskStatus {
