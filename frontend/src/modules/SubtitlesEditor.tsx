@@ -23,8 +23,11 @@ interface SubtitleEditorProps {
 function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [wrongSubsFormat, setWrongSubsFormat] = useState(false);
   const processStatus = taskData.voice_generation_status;
   const taskId = taskData.id;
+
+  let subsChanged = true;
 
   useEffect(() => {
     const fetchSubtitles = async () => {
@@ -43,7 +46,37 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
     };
 
     fetchSubtitles();
-  }, [taskData]);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (subtitles.length == 0) return;
+      if (subsChanged) {
+        subsChanged = false;
+        await saveSubtitles();
+      }
+    }, 3000); // 10 seconds = 10000 ms
+
+    return () => clearInterval(interval);
+  }, [subtitles]);
+
+  const saveSubtitles = async () => {
+    try {
+      const response = await httpClient.post(
+        `${SERVER_URL}/save_subs/${taskId}`,
+        { json_subs: subtitles }
+      );
+      console.log("Subs updated", response.data);
+
+      if (response.data.status == "success") {
+        setWrongSubsFormat(false);
+      } else {
+        setWrongSubsFormat(true);
+      }
+    } catch (error) {
+      console.error("Error saving subtitles");
+    }
+  };
 
   const handleInputChange = (
     index: number,
@@ -53,14 +86,19 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
     const newSubtitles = subtitles.map((subtitle, i) =>
       i === index ? { ...subtitle, [field]: value } : subtitle
     );
+
+    subsChanged = true;
     setSubtitles(newSubtitles);
   };
 
   const handleGenerateVoice = async () => {
     try {
+      await saveSubtitles();
+
+      if (wrongSubsFormat) return;
+
       const response = await httpClient.post(
-        `${SERVER_URL}/generate_voice/${taskId}`,
-        { json_subs: subtitles }
+        `${SERVER_URL}/generate_voice/${taskId}`
       );
       if (response.data.status === "success") {
         fetchTaskFunc();
@@ -123,6 +161,12 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
           </div>
         ))}
       </div>
+      {wrongSubsFormat ? (
+        <div className={styles.wrongSubsFormat_div}>
+          Incorrect subs format! Please check the subs.
+        </div>
+      ) : null}
+
       <div className={styles_loading_anim.loader_container}>
         {processStatus != TaskStatus.idle ? (
           <>
@@ -135,7 +179,8 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
             onClick={handleGenerateVoice}
             disabled={
               !taskData.json_translated_subs_path ||
-              processStatus != TaskStatus.idle
+              processStatus != TaskStatus.idle ||
+              wrongSubsFormat
             }
           >
             Generate voice

@@ -1,5 +1,6 @@
 import logging
 from flask import jsonify, request, send_from_directory, session
+from modules.utilities.sub_parser import check_json_subs_format
 from modules.utilities.task_status_enum import TaskStatus
 from database import db_operations
 from database.models import Task, User
@@ -123,7 +124,38 @@ def register_routes(app):
             return jsonify({'status': 'error', 'message': 'Invalid JSON format'}), 400
 
         return jsonify({'status': 'success', 'json_subs': json_subs}), 200
+    
+    @app.route("/save_subs/<task_id>", methods=["POST"])
+    async def save_subs(task_id):
+        try:
+            new_subs = request.json.get('json_subs')
+            if new_subs is None:
+                return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
 
+            is_valid = check_json_subs_format(new_subs)
+
+            if not is_valid:
+                return jsonify({'status': 'error', 'message': 'Invalid subtitles format'}), 200
+
+            task = db_operations.get_task_by_id(task_id)
+            if task is None:
+                return jsonify({'status': 'error', 'message': 'Task not found'}), 404
+
+            subs_path = task.json_translated_subs_path
+            if not subs_path:
+                return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
+
+            with open(subs_path, "w") as json_file:
+                json.dump(new_subs, json_file, indent=4)
+
+        except Exception as e:
+            err_message = str(e)
+            logging.error(err_message)
+            db_operations.set_task_voice_generation_status(task_id=task_id, status=TaskStatus.idle)
+            return jsonify({'status': 'error', 'message': err_message}), 500
+
+        return jsonify({'status': 'success'}), 202
+    
     @app.route("/create_subs", methods=["POST"])
     async def create_subs():
         try:
@@ -159,10 +191,6 @@ def register_routes(app):
     @app.route("/generate_voice/<task_id>", methods=["POST"])
     def generate_voice(task_id):
         try:
-            new_subs = request.json.get('json_subs')
-            if new_subs is None:
-                return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
-
             task = db_operations.get_task_by_id(task_id)
             if task is None:
                 return jsonify({'status': 'error', 'message': 'Task not found'}), 404
@@ -170,9 +198,6 @@ def register_routes(app):
             subs_path = task.json_translated_subs_path
             if not subs_path:
                 return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
-
-            with open(subs_path, "w") as json_file:
-                json.dump(new_subs, json_file, indent=4)
 
             voice_task_item = VoiceGeneratorQueueItem(
                 task_id=task_id,

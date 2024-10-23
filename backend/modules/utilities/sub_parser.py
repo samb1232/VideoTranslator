@@ -193,3 +193,33 @@ def parse_srt_to_arr(subtitles_srt_string: str):
         i += 1
 
     return subtitles
+
+
+def check_json_subs_format(subs):
+    if not isinstance(subs, list):
+        return False
+
+    for sub in subs:
+        if not isinstance(sub, dict):
+            return False
+
+        if not all(key in sub for key in ["id", "speaker", "text", "start", "end"]):
+            return False
+
+        if not isinstance(sub["id"], int):
+            return False
+
+        if not isinstance(sub["speaker"], str) or not re.match(r'^[A-Z]$', sub["speaker"]):
+            return False
+
+        if not isinstance(sub["text"], str):
+            return False
+
+        time_pattern = re.compile(r'^\d{2}:\d{2}:\d{2},\d{3}$')
+        if not isinstance(sub["start"], str) or not time_pattern.match(sub["start"]):
+            return False
+
+        if not isinstance(sub["end"], str) or not time_pattern.match(sub["end"]):
+            return False
+
+    return True
