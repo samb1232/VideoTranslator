@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { TaskData, TaskStatus } from "../utils/taskData";
 import httpClient from "../utils/httpClient";
 
@@ -17,14 +17,13 @@ interface Subtitle {
 
 interface SubtitleEditorProps {
   taskData: TaskData;
+  fetchTaskFunc: () => Promise<void>;
 }
 
-const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
+function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [processStatus, setProcessStatus] = useState<string>(
-    taskData.voice_generation_status
-  );
+  const processStatus = taskData.voice_generation_status;
   const taskId = taskData.id;
 
   useEffect(() => {
@@ -58,20 +57,18 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
   };
 
   const handleGenerateVoice = async () => {
-    setProcessStatus(TaskStatus.queued);
     try {
       const response = await httpClient.post(
         `${SERVER_URL}/generate_voice/${taskId}`,
         { json_subs: subtitles }
       );
       if (response.data.status === "success") {
-        // TODO: Make propper refetch
+        fetchTaskFunc();
       } else {
         setError(response.data.message);
       }
     } catch (error) {
       setError("Error uploading subtitles and generating voice");
-      setProcessStatus(TaskStatus.idle);
     }
   };
 
@@ -147,6 +144,6 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ taskData }) => {
       </div>
     </div>
   );
-};
+}
 
 export default SubtitleEditor;

@@ -17,13 +17,15 @@ const languages = [
 
 interface VideoUploaderProps {
   taskData: TaskData;
+  fetchTaskFunc: () => Promise<void>;
 }
 
-export default function VideoUploader({ taskData }: VideoUploaderProps) {
+export default function VideoUploader({
+  taskData,
+  fetchTaskFunc,
+}: VideoUploaderProps) {
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [processStatus, setProcessStatus] = useState<string>(
-    taskData.subs_generation_status
-  );
+  const processStatus = taskData.subs_generation_status;
   const [languageFrom, setLanguageFrom] = useState<string>(taskData.lang_from);
   const [languageTo, setLanguageTo] = useState<string>(taskData.lang_to);
   const [error, setError] = useState("");
@@ -35,18 +37,15 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
   };
 
   const handleUploadButton = async () => {
-    setProcessStatus(TaskStatus.queued);
     setError("");
 
     if (!videoFile) {
       setError("No video file selected");
-      setProcessStatus(TaskStatus.idle);
       return;
     }
 
     if (videoFile.type != "video/mp4") {
       setError("Wrong video format. Try mp4.");
-      setProcessStatus(TaskStatus.idle);
       return;
     }
 
@@ -70,10 +69,9 @@ export default function VideoUploader({ taskData }: VideoUploaderProps) {
       if (response.data.status === "error") {
         setError(response.data.message);
       }
-      // TODO: Make propper refetch
+      fetchTaskFunc();
     } catch (error) {
       setError(error as string);
-      setProcessStatus(TaskStatus.idle);
     }
   };
 

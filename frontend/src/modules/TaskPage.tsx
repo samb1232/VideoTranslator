@@ -13,7 +13,7 @@ import VideoPlayer from "./VideoPlayer";
 
 import styles from "./styles/taskPage.module.css";
 import { SERVER_URL } from "../utils/serverInfo";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const taskId = params.taskId;
@@ -27,8 +27,23 @@ export async function loader({ params }: LoaderFunctionArgs) {
 }
 
 export default function TaskPage() {
-  const { taskInfo } = useLoaderData() as { taskInfo: TaskData };
+  const initialTaskInfo = useLoaderData() as { taskInfo: TaskData };
+  const [taskInfo, setTaskInfo] = useState(initialTaskInfo.taskInfo);
   const navigate = useNavigate();
+
+  async function fetchTaskInfo() {
+    try {
+      const response = await httpClient.get(
+        `${SERVER_URL}/get_task/${taskInfo.id}`
+      );
+
+      if (response.data.status === "success") {
+        setTaskInfo(response.data.task_info);
+      }
+    } catch (error) {
+      console.error("Error fetching task info:", error);
+    }
+  }
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -43,6 +58,12 @@ export default function TaskPage() {
     };
     getUserInfo();
   });
+
+  useEffect(() => {
+    const intervalId = setInterval(fetchTaskInfo, 10000);
+
+    return () => clearInterval(intervalId);
+  }, [taskInfo.id]);
 
   const deleteTask = async () => {
     try {
@@ -72,12 +93,12 @@ export default function TaskPage() {
         Delete task
       </button>
       <h1>{taskInfo.title}</h1>
-      <VideoUploader taskData={taskInfo} />
+      <VideoUploader taskData={taskInfo} fetchTaskFunc={fetchTaskInfo} />
       {taskInfo.json_translated_subs_path && (
         <>
           <h1 className={styles.subs_editor_header}>Subtitle Editor</h1>
           <div className={styles.subs_and_video_div}>
-            <SubtitleEditor taskData={taskInfo} />
+            <SubtitleEditor taskData={taskInfo} fetchTaskFunc={fetchTaskInfo} />
 
             <div className={styles.video_player_div}>
               {taskInfo.translated_video_path != "" && (
