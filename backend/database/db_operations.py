@@ -15,7 +15,7 @@ def get_user_by_id(user_id: str) -> User:
 
 
 def get_all_tasks_list() -> List[Task]:
-    return Task.query.order_by(Task.last_used).all()
+    return Task.query.order_by(Task.creation_date).all()
 
 
 def get_task_by_id(task_id: str) -> Task:
