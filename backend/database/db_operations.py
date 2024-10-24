@@ -14,7 +14,7 @@ def get_user_by_id(user_id: str) -> User:
     return User.query.filter_by(id=user_id).first()
 
 
-def get_all_tasks_list() -> List:
+def get_all_tasks_list() -> List[Task]:
     return Task.query.order_by(Task.last_used).all()
 
 
@@ -156,4 +156,3 @@ def add_users_from_json(json_filepath):
     except Exception as e:
         print(f"Error committing to database: {e}")
         db.session.rollback()
-
