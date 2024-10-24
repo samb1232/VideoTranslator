@@ -6,9 +6,13 @@ import { useNavigate } from "react-router";
 import { SERVER_URL } from "../utils/serverInfo";
 interface CreateTaskWindowProps {
   closeWindowFunc: () => void;
+  creatorName: string | undefined;
 }
 
-function CreateTaskWindow({ closeWindowFunc }: CreateTaskWindowProps) {
+function CreateTaskWindow({
+  closeWindowFunc,
+  creatorName,
+}: CreateTaskWindowProps) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
 
   const [error, setError] = useState<string | null>(null);
@@ -16,11 +20,16 @@ function CreateTaskWindow({ closeWindowFunc }: CreateTaskWindowProps) {
 
   const handleCreateTask = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (creatorName == undefined) {
+      setError("User is not logged in.");
+      return;
+    }
     try {
       if (newTaskTitle.trim() === "") return;
 
       const response = await httpClient.post(`${SERVER_URL}/create_task`, {
         title: newTaskTitle,
+        creator_username: creatorName,
       });
 
       if (response.data.status === "success") {

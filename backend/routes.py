@@ -79,8 +79,9 @@ def register_routes(app):
     @app.route("/create_task",  methods=["POST"])
     def create_task():
         title = request.json['title']
+        creator_username = request.json['creator_username']
         logging.info(f"Creating new task: {title}")
-        task = db_operations.create_new_task(title=title)
+        task = db_operations.create_new_task(title=title, creator_username=creator_username)
         return jsonify({'status': 'success', "task_id":  task.id}), 200
 
     @app.route('/delete_task/<id>', methods=['DELETE'])

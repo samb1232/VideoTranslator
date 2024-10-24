@@ -22,9 +22,10 @@ def get_task_by_id(task_id: str) -> Task:
     return Task.query.filter_by(id=task_id).first()
 
 
-def create_new_task(title: str) -> Task:
+def create_new_task(title: str, creator_username: str) -> Task:
     new_task = Task(
         title=title,
+        creator_username=creator_username,
         last_used=datetime.now(),
         creation_date = datetime.now()
     )

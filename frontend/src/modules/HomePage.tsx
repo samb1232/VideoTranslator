@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { ApiResponse, TaskData, User } from "../utils/types";
+import { ApiResponse, TaskData, TaskStatus, User } from "../utils/types";
 import { Link, useNavigate } from "react-router-dom";
 import httpClient from "../utils/httpClient";
-import TaskItem from "./TaskItem";
 import CreateTaskWindow from "./CreateTaskWindow";
 
 import styles from "./styles/home.module.css";
 import { SERVER_URL } from "../utils/serverInfo";
+import { formatDate } from "../utils/dateFormatter";
 
 function HomePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -46,7 +46,6 @@ function HomePage() {
         `${SERVER_URL}/get_all_tasks`
       );
       if (response.data.status === "success") {
-        console.log(response.data);
         setTasks(response.data.tasks);
       } else {
         setError("Failed to fetch tasks");
@@ -62,6 +61,25 @@ function HomePage() {
     setIsModalOpen(true);
   };
 
+  function getTaskStatus(
+    subs_gen_status: string,
+    voice_gen_status: string
+  ): string {
+    const statuses = [subs_gen_status, voice_gen_status];
+    const priorities = [
+      TaskStatus.processing,
+      TaskStatus.queued,
+      TaskStatus.idle,
+    ];
+
+    for (const priority of priorities) {
+      if (statuses.includes(priority)) {
+        return priority;
+      }
+    }
+    return "";
+  }
+
   return (
     <div className={styles.body}>
       <div className={styles.top_right}>
@@ -70,7 +88,7 @@ function HomePage() {
           Logout
         </button>
       </div>
-      <h1>ExtFo Video Translator</h1>
+      <h1 className={styles.extfo_h1}>ExtFo Video Translator</h1>
       <ul className={styles.task_list}>
         <li className={styles.create_task_button} onClick={openModal}>
           +
@@ -82,19 +100,58 @@ function HomePage() {
         ) : error ? (
           <div>{error}</div>
         ) : (
-          tasks.map((task) => (
-            <Link
-              key={task.id}
-              className={styles.link_taskItem}
-              to={"/task/" + task.id}
-            >
-              <TaskItem key={task.id} task={task} />
-            </Link>
-          ))
+          <table className={styles.task_table}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Creation Date</th>
+                <th>Title</th>
+                <th>Last Used</th>
+                <th>Lang From</th>
+                <th>Lang To</th>
+                <th>Creator</th>
+                <th>Status</th>
+                {/* <th>YT Channel</th> */}
+                <th>YT Name</th>
+                <th>YT Orig URL</th>
+                <th>YT Our URL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((task) => (
+                <tr key={task.number_id}>
+                  <td>{task.number_id.toString().padStart(4, "0")}</td>
+                  <td>{formatDate(task.creation_date)}</td>
+                  <td>
+                    <Link key={task.id} to={`/task/${task.id}`}>
+                      {task.title}
+                    </Link>
+                  </td>
+                  <td>{formatDate(task.last_used)}</td>
+                  <td>{task.lang_from}</td>
+                  <td>{task.lang_to}</td>
+                  <td>{task.creator_username}</td>
+                  <td>
+                    {getTaskStatus(
+                      task.subs_generation_status,
+                      task.voice_generation_status
+                    )}
+                  </td>
+                  {/* <td>{task.yt_channel}</td> */}
+                  <td>{task.yt_name}</td>
+                  <td>{task.yt_orig_url}</td>
+                  <td>{task.yt_our_url}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </ul>
       {isModalOpen && (
-        <CreateTaskWindow closeWindowFunc={() => setIsModalOpen(false)} />
+        <CreateTaskWindow
+          closeWindowFunc={() => setIsModalOpen(false)}
+          creatorName={user?.username}
+        />
       )}
     </div>
   );
