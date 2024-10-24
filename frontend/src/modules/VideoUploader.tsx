@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import httpClient from "../utils/httpClient";
-import { TaskData, TaskStatus } from "../utils/taskData";
+import { TaskData, TaskStatus } from "../utils/types";
 
 import styles_loading_anim from "./styles/loading_anim.module.css";
 import styles_err_message from "./styles/error_message.module.css";

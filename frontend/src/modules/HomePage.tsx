@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiResponse, TaskDescription, User } from "../utils/types";
+import { ApiResponse, TaskData, User } from "../utils/types";
 import { Link, useNavigate } from "react-router-dom";
 import httpClient from "../utils/httpClient";
 import TaskItem from "./TaskItem";
@@ -10,7 +10,7 @@ import { SERVER_URL } from "../utils/serverInfo";
 
 function HomePage() {
   const [user, setUser] = useState<User | null>(null);
-  const [tasks, setTasks] = useState<TaskDescription[]>([]);
+  const [tasks, setTasks] = useState<TaskData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,6 +46,7 @@ function HomePage() {
         `${SERVER_URL}/get_all_tasks`
       );
       if (response.data.status === "success") {
+        console.log(response.data);
         setTasks(response.data.tasks);
       } else {
         setError("Failed to fetch tasks");

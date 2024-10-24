@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TaskData, TaskStatus } from "../utils/taskData";
+import { TaskData, TaskStatus } from "../utils/types";
 import httpClient from "../utils/httpClient";
 
 import styles from "./styles/subtitleEditor.module.css";

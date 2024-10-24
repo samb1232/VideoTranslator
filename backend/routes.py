@@ -63,12 +63,7 @@ def register_routes(app):
         tasks_arr = db_operations.get_all_tasks_list()
         tasks = []
         for task in tasks_arr:
-            task_dict  = {
-                "id": task.id,
-                "title":  task.title,
-                "last_used":  task.last_used
-            }
-            tasks.append(task_dict)
+            tasks.append(task.to_json())
         # reverse tasks list and crop first 100 tasks
         tasks = tasks[::-1][:100]
 

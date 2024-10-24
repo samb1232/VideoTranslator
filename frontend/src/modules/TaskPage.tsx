@@ -7,7 +7,7 @@ import {
 import httpClient from "../utils/httpClient";
 import VideoUploader from "./VideoUploader";
 import DownloadButton from "./DownloadButton";
-import { TaskData } from "../utils/taskData";
+import { TaskData } from "../utils/types";
 import SubtitleEditor from "./SubtitlesEditor";
 import VideoPlayer from "./VideoPlayer";
 

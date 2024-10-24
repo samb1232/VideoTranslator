@@ -1,10 +1,10 @@
 import { formatDate } from "../utils/dateFormatter";
-import { TaskDescription } from "../utils/types";
+import { TaskData } from "../utils/types";
 
 import styles from "./styles/taskItem.module.css";
 
 interface TaskItemProps {
-  task: TaskDescription;
+  task: TaskData;
 }
 
 function TaskItem({ task }: TaskItemProps) {

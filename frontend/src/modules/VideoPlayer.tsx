@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import httpClient from "../utils/httpClient";
-import { TaskData } from "../utils/taskData";
+import { TaskData } from "../utils/types";
 import { SERVER_URL } from "../utils/serverInfo";
 import styles_err_message from "./styles/error_message.module.css";
 
