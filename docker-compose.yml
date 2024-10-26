@@ -6,13 +6,13 @@ services:
     build:
       context: ./backend
     ports:
-      - "0.0.0.0:5000:5000"
+      - "5000:5000"
     environment:
       - FLASK_ENV=development
       - DATABASE_URL=mysql+pymysql://user123:U4yfJPqa@db:3306/flask_db
       - REDIS_URL=redis://redis:6379
     volumes:
-        - res_data:/app/uploads
+      - res_data:/app/uploads
     depends_on:
       - db
       - redis
@@ -24,7 +24,7 @@ services:
     build:
       context: ./frontend
     ports:
-      - "0.0.0.0:3000:3000"
+      - "3000:3000"
     environment:
       - VITE_API_URL=http://backend:5000
     networks:
@@ -43,16 +43,16 @@ services:
       MYSQL_COLLATION: utf8mb4_unicode_ci
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     ports:
-      - "0.0.0.0:3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
-        - mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     networks:
       - vid_trans_network
 
   redis:
     image: redis
     ports:
-      - "0.0.0.0:6379:6379"
+      - "127.0.0.1:6379:6379"
     networks:
       - vid_trans_network
 
