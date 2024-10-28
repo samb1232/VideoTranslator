@@ -135,6 +135,12 @@ export default function TaskPage() {
             title={"Download SRT subs in " + taskInfo.lang_to}
           />
         )}
+        {taskInfo.json_translated_subs_path && (
+          <DownloadButton
+            filepath={taskInfo.json_translated_subs_path}
+            title={"Download JSON subs for ChatGPT"}
+          />
+        )}
       </div>
     </div>
   );
