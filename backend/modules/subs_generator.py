@@ -39,7 +39,8 @@ class SubsGenerator:
             "speaker": utterance.speaker,
             "text": words_arr[0].text,
             "start": format_time_ms_to_str(words_arr[0].start),
-            "end": format_time_ms_to_str(words_arr[0].end)
+            "end": format_time_ms_to_str(words_arr[0].end),
+            "modified": True
         }
 
         for i in range(1, len(words_arr)):
@@ -57,12 +58,14 @@ class SubsGenerator:
                     "speaker": utterance.speaker,
                     "text": words_arr[i].text,
                     "start": format_time_ms_to_str(words_arr[i].start),
-                    "end": format_time_ms_to_str(words_arr[i].end)
+                    "end": format_time_ms_to_str(words_arr[i].end),
+                    "modified": True
                 }
             else:
                 # Continue the current utterance
                 current_subtitle["text"] += " " + words_arr[i].text
                 current_subtitle["end"] = format_time_ms_to_str(words_arr[i].end)
+
 
         # Add the last subtitle
         split_subtitles.append(current_subtitle)
@@ -77,7 +80,6 @@ class SubsGenerator:
         os.makedirs(output_dir, exist_ok=True)
         
         out_filename = video_filename.split(".")[-2]
-
         self.audio_file_path = os.path.join(output_dir, f"{out_filename}_src.wav")
 
         extract_audio_from_video(video_file_path, self.audio_file_path)
@@ -86,7 +88,7 @@ class SubsGenerator:
 
         # Export subtitles as srt
         subtitles = transcript.export_subtitles_srt()
-        self.srt_out_filepath = os.path.join(output_dir,  f"{out_filename}_src.srt")
+        self.srt_out_filepath = os.path.join(output_dir, f"{out_filename}_src.srt")
         # subtitles = correct_subtitles_length(subtitles)
         with open(self.srt_out_filepath, "w", encoding="utf-8") as srt_file:
             srt_file.write(subtitles)
@@ -108,5 +110,3 @@ class SubsGenerator:
     
     def get_srt_out_filepath(self):
         return self.srt_out_filepath
-        
-

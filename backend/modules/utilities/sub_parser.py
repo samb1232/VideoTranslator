@@ -3,16 +3,17 @@ import re
 
 
 class Subtitle:
-    def __init__(self, id: int, start_time: int, end_time: int, text: str, speaker: str | None = None):
+    def __init__(self, id: int, start_time: int, end_time: int, text: str, speaker: str | None = None, modified: bool = True):
         self.id = id
         self.start_time = start_time
         self.end_time = end_time
         self.duration = end_time - start_time
         self.speaker = speaker
         self.text = text
+        self.modified = modified
 
     def __repr__(self):
-        return f"Subtitle(number={self.id}, start_time={self.start_time}, end_time={self.end_time}, duration={self.duration}, speaker={self.speaker}, text={self.text})"
+        return f"Subtitle(number={self.id}, start_time={self.start_time}, end_time={self.end_time}, duration={self.duration}, speaker={self.speaker}, text={self.text}, modified={self.modified})"
 
 
 MIN_GAP_BETWEEN_SUBS_IN_SECS = 500
@@ -39,7 +40,7 @@ def correct_subtitles_length(subs_arr) -> str:
                     id=index, 
                     start_time=new_start_time, 
                     end_time=new_end_time, 
-                    text=new_text
+                    text=new_text,
                     )
                 new_subs_arr.append(new_subtitle)
                 i += 2
@@ -97,9 +98,24 @@ def write_subs_arr_to_srt_file(subs_arr: list, output_file_path: str):
 
 
 def write_subs_arr_to_json_file(subtitles, filename):
-    subtitles_dict = [subtitle_to_dict(subtitle) for subtitle in subtitles]
+    subtitles_dict = get_subs_as_json_arr(subtitles)
     with open(filename, 'w', encoding='utf-8') as file:
         json.dump(subtitles_dict, file, ensure_ascii=False, indent=4)
+
+
+def get_subs_as_json_arr(subtitles):
+    return [subtitle_to_dict(subtitle) for subtitle in subtitles]
+
+
+def subtitle_to_dict(subtitle: Subtitle):
+    return {
+        "id": subtitle.id,
+        "start": format_time_ms_to_str(subtitle.start_time),
+        "end": format_time_ms_to_str(subtitle.end_time),
+        "text": subtitle.text,
+        "speaker": subtitle.speaker,
+        "modified": subtitle.modified,
+    }
 
 
 def parse_json_to_subtitles(json_filename: str):
@@ -115,29 +131,19 @@ def parse_json_to_subtitles(json_filename: str):
             start_time=start_time,
             end_time=end_time,
             text=data['text'],
-            speaker=data['speaker']
+            speaker=data['speaker'],
+            modified= data['modified'] if 'modified' in data else True,
         )
         subtitles.append(subtitle)
 
     return subtitles
 
 
-def subtitle_to_dict(subtitle: Subtitle):
-    return {
-        "id": subtitle.id,
-        "start": format_time_ms_to_str(subtitle.start_time),
-        "end": format_time_ms_to_str(subtitle.end_time),
-        "text": subtitle.text,
-        "speaker": subtitle.speaker
-    }
-
-
-def format_time_ms_to_str(time_ms: int, for_srt: bool = False):
+def format_time_ms_to_str(time_ms: int):
     milliseconds = time_ms % 1000
     seconds = (time_ms // 1000) % 60
     minutes = (time_ms // (1000 * 60)) % 60
     hours = time_ms // (1000 * 60 * 60)
-    ms_sep = "," if for_srt else "."
     return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
 
 
@@ -203,7 +209,7 @@ def check_json_subs_format(subs):
         if not isinstance(sub, dict):
             return False
 
-        if not all(key in sub for key in ["id", "speaker", "text", "start", "end"]):
+        if not all(key in sub for key in ["id", "speaker", "text", "start", "end", "modified"]):
             return False
 
         if not isinstance(sub["id"], int):

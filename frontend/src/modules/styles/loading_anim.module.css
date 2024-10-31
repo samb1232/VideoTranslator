@@ -40,3 +40,12 @@
     background-color: #ccc;
     cursor: not-allowed;
   }
+
+  .loader_roller {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .status_text {
+    font-size: 18px;
+  }

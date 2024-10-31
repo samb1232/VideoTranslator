@@ -7,7 +7,7 @@ import {
 import httpClient from "../utils/httpClient";
 import VideoUploader from "./VideoUploader";
 import DownloadButton from "./DownloadButton";
-import { TaskData } from "../utils/types";
+import { TaskData, TaskStatus } from "../utils/types";
 import SubtitleEditor from "./SubtitlesEditor";
 import VideoPlayer from "./VideoPlayer";
 
@@ -31,6 +31,8 @@ export default function TaskPage() {
   const [taskInfo, setTaskInfo] = useState(initialTaskInfo.taskInfo);
   const navigate = useNavigate();
 
+  let prevStatus = taskInfo.voice_generation_status;
+
   async function fetchTaskInfo() {
     try {
       const response = await httpClient.get(
@@ -38,7 +40,14 @@ export default function TaskPage() {
       );
 
       if (response.data.status === "success") {
+        if (
+          prevStatus != TaskStatus.idle &&
+          response.data.task_info.voice_generation_status == TaskStatus.idle
+        ) {
+          window.location.reload();
+        }
         setTaskInfo(response.data.task_info);
+        prevStatus = response.data.task_info.voice_generation_status;
       }
     } catch (error) {
       console.error("Error fetching task info:", error);
@@ -57,7 +66,7 @@ export default function TaskPage() {
       }
     };
     getUserInfo();
-  });
+  }, []);
 
   useEffect(() => {
     const intervalId = setInterval(fetchTaskInfo, 10000);

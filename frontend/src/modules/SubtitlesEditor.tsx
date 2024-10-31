@@ -13,6 +13,7 @@ interface Subtitle {
   end: string;
   text: string;
   speaker: string;
+  modified: boolean;
 }
 
 interface SubtitleEditorProps {
@@ -28,23 +29,21 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
   const taskId = taskData.id;
 
   let subsChanged = true;
-
-  useEffect(() => {
-    const fetchSubtitles = async () => {
-      try {
-        const response = await httpClient.get(
-          `${SERVER_URL}/get_json_subs/${taskId}`
-        );
-        if (response.data.status === "success") {
-          setSubtitles(response.data.json_subs);
-        } else {
-          setError(response.data.message);
-        }
-      } catch (error) {
-        setError("Error fetching subtitles");
+  const fetchSubtitles = async () => {
+    try {
+      const response = await httpClient.get(
+        `${SERVER_URL}/get_json_subs/${taskId}`
+      );
+      if (response.data.status === "success") {
+        setSubtitles(response.data.json_subs);
+      } else {
+        setError(response.data.message);
       }
-    };
-
+    } catch (error) {
+      setError("Error fetching subtitles");
+    }
+  };
+  useEffect(() => {
     fetchSubtitles();
   }, []);
 
@@ -83,7 +82,7 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
     value: string
   ) => {
     const newSubtitles = subtitles.map((subtitle, i) =>
-      i === index ? { ...subtitle, [field]: value } : subtitle
+      i === index ? { ...subtitle, [field]: value, modified: true } : subtitle
     );
 
     subsChanged = true;
@@ -115,51 +114,60 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
 
   return (
     <div className={styles.container}>
-      <div className={styles.subtitleList}>
-        {subtitles.map((subtitle, index) => (
-          <div key={subtitle.id} className={styles.subtitleItem}>
-            <div className={styles.sub_id_div}>{subtitle.id}</div>
+      {processStatus == TaskStatus.idle && (
+        <div className={styles.subtitleList}>
+          {subtitles.map((subtitle, index) => (
+            <div key={subtitle.id} className={styles.subtitleItem}>
+              <div className={styles.sub_id_div}>
+                {subtitle.id}{" "}
+                {subtitle.modified && (
+                  <span className={styles.modified}>*</span>
+                )}
+              </div>
 
-            <div className={styles.inputGroup}>
-              <div className={styles.speaker_div}>
-                <i>Speaker:</i>
-                <input
-                  type="text"
-                  value={subtitle.speaker}
-                  onChange={(e) =>
-                    handleInputChange(index, "speaker", e.target.value)
-                  }
-                  className={styles.inputGroup + " " + styles.speaker}
-                />
+              <div className={styles.inputGroup}>
+                <div className={styles.speaker_div}>
+                  <i>Speaker:</i>
+                  <input
+                    type="text"
+                    value={subtitle.speaker}
+                    onChange={(e) =>
+                      handleInputChange(index, "speaker", e.target.value)
+                    }
+                    className={styles.inputGroup + " " + styles.speaker}
+                  />
+                </div>
+                <div className={styles.start_end_time_div}>
+                  <input
+                    type="text"
+                    value={subtitle.start}
+                    onChange={(e) =>
+                      handleInputChange(index, "start", e.target.value)
+                    }
+                    className={styles.inputGroup}
+                  />
+                  <div>→</div>
+                  <input
+                    type="text"
+                    value={subtitle.end}
+                    onChange={(e) =>
+                      handleInputChange(index, "end", e.target.value)
+                    }
+                    className={styles.inputGroup}
+                  />
+                </div>
               </div>
-              <div className={styles.start_end_time_div}>
-                <input
-                  type="text"
-                  value={subtitle.start}
-                  onChange={(e) =>
-                    handleInputChange(index, "start", e.target.value)
-                  }
-                  className={styles.inputGroup}
-                />
-                <div>→</div>
-                <input
-                  type="text"
-                  value={subtitle.end}
-                  onChange={(e) =>
-                    handleInputChange(index, "end", e.target.value)
-                  }
-                  className={styles.inputGroup}
-                />
-              </div>
+              <textarea
+                value={subtitle.text}
+                onChange={(e) =>
+                  handleInputChange(index, "text", e.target.value)
+                }
+                className={styles.textarea}
+              />
             </div>
-            <textarea
-              value={subtitle.text}
-              onChange={(e) => handleInputChange(index, "text", e.target.value)}
-              className={styles.textarea}
-            />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
       {wrongSubsFormat ? (
         <div className={styles.wrongSubsFormat_div}>
           Incorrect subs format! Please check the subs.
@@ -168,10 +176,12 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
 
       <div className={styles_loading_anim.loader_container}>
         {processStatus != TaskStatus.idle ? (
-          <>
-            <div>Status: {processStatus}</div>
+          <div className={styles_loading_anim.loader_roller}>
+            <p className={styles_loading_anim.status_text}>
+              Status: {processStatus}
+            </p>
             <div className={styles_loading_anim.loader}></div>
-          </>
+          </div>
         ) : (
           <button
             className={styles_loading_anim.button}
