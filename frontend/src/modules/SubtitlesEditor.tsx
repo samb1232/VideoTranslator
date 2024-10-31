@@ -170,7 +170,8 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
       )}
       {wrongSubsFormat ? (
         <div className={styles.wrongSubsFormat_div}>
-          Incorrect subs format! Please check the subs.
+          Incorrect subs format! Please check the subs or reload page to reset
+          subs.
         </div>
       ) : null}
 
