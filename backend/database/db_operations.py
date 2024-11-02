@@ -117,7 +117,7 @@ def update_task_after_voice_generated(
         raise e
 
 
-def reset_all_task_processing():
+def reset_all_tasks_status():
     tasks = Task.query.all()
     for task in tasks:
         task.subs_generation_status = TaskStatus.idle.value
@@ -129,7 +129,7 @@ def reset_all_task_processing():
         raise e
     
 
-def add_users_from_json(json_filepath):
+def add_users_from_json(json_filepath: str):
     if not os.path.exists(json_filepath): 
         return
     try:

@@ -5,7 +5,7 @@ from modules.utilities.task_status_enum import TaskStatus
 
 db = SQLAlchemy()
 
-def get_uuid():
+def get_uuid() -> str:
     return uuid4().hex
 
 class User(db.Model):
@@ -44,7 +44,7 @@ class Task(db.Model):
     yt_our_url = db.Column(db.Text, default='', nullable=False)
 
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
             'id': self.id,
             'number_id': self.number_id,

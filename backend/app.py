@@ -29,7 +29,7 @@ server_session = Session(app)
 db.init_app(app)
 with app.app_context():
     db.create_all()
-    db_operations.reset_all_task_processing()
+    db_operations.reset_all_tasks_status()
     db_operations.add_users_from_json("users.json")
 
 register_routes(app)
