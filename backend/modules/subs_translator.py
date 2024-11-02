@@ -34,9 +34,9 @@ class SubsTranslator:
         """
         Translate a subtitle .SRT file from original language to desired language.
         """
-        subs_arr = sub_parser.parse_srt_to_arr_from_file(input_file_path)
+        subs_arr = sub_parser.parse_srt_to_subtitles(input_file_path)
         subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
-        sub_parser.write_subs_arr_to_srt_file(subs_translated_arr, output_file_path)
+        sub_parser.export_subtitles_to_srt_file(subs_translated_arr, output_file_path)
 
         print("New file: ", output_file_path)
 
@@ -46,7 +46,7 @@ class SubsTranslator:
         """
         subs_arr = sub_parser.parse_json_to_subtitles(input_file_path)
         subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
-        sub_parser.write_subs_arr_to_json_file(subs_translated_arr, output_file_path)
+        sub_parser.export_subtitles_to_json_file(subs_translated_arr, output_file_path)
 
         print("New file: ", output_file_path)
 

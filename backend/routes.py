@@ -1,6 +1,6 @@
 import logging
 from flask import jsonify, request, send_from_directory, session
-from modules.utilities.sub_parser import check_json_subs_format, get_subs_as_json_arr, parse_json_to_subtitles
+from modules.utilities.sub_parser import check_json_subs_format, get_subtitles_as_json_arr, parse_json_to_subtitles
 from modules.utilities.task_status_enum import TaskStatus
 from database import db_operations
 from database.models import Task, User
@@ -114,7 +114,7 @@ def register_routes(app):
         
         try:
             subs_arr = parse_json_to_subtitles(subs_path)
-            json_subs = get_subs_as_json_arr(subs_arr)
+            json_subs = get_subtitles_as_json_arr(subs_arr)
         except FileNotFoundError:
             return jsonify({'status': 'error', 'message': 'Subtitles file not found'}), 404
         except json.JSONDecodeError:

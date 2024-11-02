@@ -5,7 +5,7 @@ from TTS.api import TTS
 from audiostretchy.stretch import stretch_audio
 
 from modules.utilities import audio_injector
-from modules.utilities.sub_parser import parse_json_to_subtitles, write_subs_arr_to_json_file
+from modules.utilities.sub_parser import parse_json_to_subtitles, export_subtitles_to_json_file
 from modules.utilities.voice_extractor import extract_speaker_voices
 
 
@@ -90,7 +90,7 @@ class VoiceGenerator:
                                      )
             subtitle.modified = False
         
-        write_subs_arr_to_json_file(subtitles_arr, json_subs_filepath)
+        export_subtitles_to_json_file(subtitles_arr, json_subs_filepath)
 
         self._merge_audios(subtitles_arr, out_wav_filepath)
         

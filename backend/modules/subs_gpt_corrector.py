@@ -2,7 +2,7 @@ import json
 import requests
 
 from backend.config import YA_GPT_API_KEY, YA_GPT_FOLDER_ID
-from modules.utilities.sub_parser import parse_json_to_subtitles, write_subs_arr_to_json_file
+from modules.utilities.sub_parser import parse_json_to_subtitles, export_subtitles_to_json_file
 
 api_key = YA_GPT_API_KEY
 folder_id = YA_GPT_FOLDER_ID
@@ -67,4 +67,4 @@ def correct_subs_gender_and_numbers(subtitles_arr, speakers_genders_dict):
 def correct_json_gender_and_numbers(in_json_filepath: str, speakers_genders_dict: dict,  out_json_filepath: str):
     subs_arr = parse_json_to_subtitles(in_json_filepath)
     fixed_subs = correct_subs_gender_and_numbers(subs_arr, speakers_genders_dict)
-    write_subs_arr_to_json_file(fixed_subs, out_json_filepath)
+    export_subtitles_to_json_file(fixed_subs, out_json_filepath)
