@@ -33,7 +33,6 @@ services:
   
   db:
     image: mysql:5.7
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ajgkRpo1
       MYSQL_DATABASE: flask_db
