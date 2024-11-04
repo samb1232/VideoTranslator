@@ -1,5 +1,6 @@
 import styles from "./styles/login.module.css";
 import styles_err_message from "./styles/error_message.module.css";
+import styles_loading_anim from "./styles/loading_anim.module.css";
 
 import React, { useEffect, useState } from "react";
 import { Form, useNavigate } from "react-router-dom";
@@ -10,11 +11,13 @@ function LoginPage() {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setErrorMessage] = useState("");
+  const [processing, setProcessing] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
+      setProcessing(true);
       const response = await httpClient.post(`${SERVER_URL}/login_user`, {
         username,
         password,
@@ -32,6 +35,8 @@ function LoginPage() {
       } else {
         setErrorMessage("An error occurred while logging in");
       }
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -75,7 +80,14 @@ function LoginPage() {
         />
         <br />
         <br />
-        <input className={styles.submit_btn} type="submit" value="Login" />
+
+        <div className={styles_loading_anim.loader_container}>
+          {processing ? (
+            <div className={styles_loading_anim.loader}></div>
+          ) : (
+            <input className={styles.submit_btn} type="submit" value="Login" />
+          )}
+        </div>
       </Form>
     </div>
   );
