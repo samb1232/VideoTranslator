@@ -2,16 +2,18 @@ import json
 import re
 from typing import List
 
+from assemblyai import Utterance
+
 
 class Subtitle:
     def __init__(self, id: int, start_time: int, end_time: int, text: str, speaker: str | None = None, modified: bool = True):
-        self.id = id
-        self.start_time = start_time
-        self.end_time = end_time
-        self.duration = end_time - start_time
-        self.speaker = speaker
-        self.text = text
-        self.modified = modified
+        self.id: int = id
+        self.start_time: int = start_time
+        self.end_time: int = end_time
+        self.duration: int = end_time - start_time
+        self.speaker: str | None = speaker
+        self.text: str = text
+        self.modified: bool = modified
 
     def to_dict(self) -> dict:
         return {
@@ -158,3 +160,77 @@ def check_json_subs_format(subs: List[dict]) -> bool:
             return False
 
     return True
+
+
+def split_utterances_to_subtitles(utterances: List[Utterance]) -> List[Subtitle]:
+    """
+    Splits an utterances into multiple parts if the pause between sentences exceeds MAX_PAUSE_DURATION_MS.
+    
+    :param utterances: The list of Utterance objects to split.
+    :return: A list of Subtitles.
+    """
+    MAX_PAUSE_BETWEEN_WORDS_MS = 1000
+    MAX_SYMBOLS_PER_SUBTITLE = 200
+    END_SENTENCE_SYMBOLS = ".?;:!"
+    id_counter = 1
+    subtitles_arr = []
+    
+    for utterance in utterances:
+        sentences_len_arr = get_sentences_len_from_text(text=utterance.text,  end_sentence_symbols=END_SENTENCE_SYMBOLS)
+        sentence_counter = 0
+        words_arr = utterance.words
+        
+        
+        current_subtitle = Subtitle(
+            id=id_counter,
+            start_time=words_arr[0].start,
+            end_time=words_arr[0].end,
+            speaker=utterance.speaker,
+            text=words_arr[0].text
+        )
+        for i in range(1, len(words_arr)):
+            pause_between_words = words_arr[i].start - words_arr[i-1].end
+            is_end_of_sentence = words_arr[i-1].text[-1] in END_SENTENCE_SYMBOLS
+            condition_pause = pause_between_words > MAX_PAUSE_BETWEEN_WORDS_MS
+            condition_end_sentence = is_end_of_sentence and len(current_subtitle.text) > MAX_SYMBOLS_PER_SUBTITLE
+            condition_next_sentence_too_big = is_end_of_sentence and (
+                sentence_counter + 1 < len(sentences_len_arr)) and (
+                sentences_len_arr[sentence_counter + 1] > MAX_SYMBOLS_PER_SUBTITLE - len(current_subtitle.text)
+                )
+            condition_sentence_too_big = len(current_subtitle.text) > 2 * MAX_SYMBOLS_PER_SUBTITLE
+            
+            if is_end_of_sentence:
+                sentence_counter += 1
+            
+            if condition_pause or condition_end_sentence or condition_next_sentence_too_big or condition_sentence_too_big:
+                # Finalize the current subtitle
+                subtitles_arr.append(current_subtitle)
+                id_counter += 1
+                # Start a new subtitle
+                current_subtitle = Subtitle(
+                    id=id_counter,
+                    start_time=words_arr[i].start,
+                    end_time=words_arr[i].end,
+                    speaker=utterance.speaker,
+                    text=words_arr[i].text
+                    )
+            else:
+                # Continue the current utterance
+                current_subtitle.text += " " + words_arr[i].text
+                current_subtitle.end_time = words_arr[i].end
+
+        # Add the last subtitle
+        subtitles_arr.append(current_subtitle)
+        id_counter += 1
+
+    return subtitles_arr
+
+
+def get_sentences_len_from_text(text: str, end_sentence_symbols: str) -> List[int]:
+    """
+    Splits the input text into sentences and returns a list of the lengths of each sentence.
+    """
+    sentence_end_pattern = f"[{re.escape(end_sentence_symbols)}]"
+    sentences = re.split(sentence_end_pattern, text)
+    sentence_lengths = [len(sentence.strip()) for sentence in sentences if sentence.strip()]
+    return sentence_lengths
