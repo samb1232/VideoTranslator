@@ -4,7 +4,7 @@ import torch
 from TTS.api import TTS
 from audiostretchy.stretch import stretch_audio
 
-from modules.utilities import audio_injector
+from modules.utilities import audio_worker
 from modules.utilities.sub_parser import parse_json_to_subtitles, export_subtitles_to_json_file
 from modules.utilities.voice_extractor import extract_speaker_voices
 
@@ -97,4 +97,4 @@ class VoiceGenerator:
 
     @staticmethod
     def replace_audio_in_video(in_audio_path: str, in_video_path: str, out_video_path: str):
-        audio_injector.replace_audio_in_video(in_audio_path, in_video_path, out_video_path, "200k")
+        audio_worker.inject_audio_in_video(in_audio_path, in_video_path, out_video_path, "200k")

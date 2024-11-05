@@ -4,7 +4,7 @@ import os
 from config import AAI_API_KEY
 import assemblyai as aai
 
-from modules.utilities.audio_extractor import extract_audio_from_video
+from modules.utilities.audio_worker import extract_audio_from_video
 from modules.utilities.sub_parser import export_subtitles_to_json_file, format_time_ms_to_str, split_utterances_to_subtitles
 
 class SubsGenerator:
