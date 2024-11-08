@@ -2,6 +2,7 @@ import logging
 import queue
 import threading
 import os
+import time
 from modules.utilities.task_status_enum import TaskStatus
 from modules.subs_generator import SubsGenerator
 from modules.subs_translator import SubsTranslator, Translators
@@ -36,6 +37,7 @@ def subs_worker():
     logging.info("Subs worker started")
     while True:
         try:
+            time.sleep(.01)
             task: SubsCreatorQueueItem = subs_queue.get(timeout=1)
             if task is None:
                 continue
@@ -58,6 +60,7 @@ def subs_worker():
                 logging.error("Error in subs worker: " + str(e))
             finally:
                 subs_queue.task_done()
+                
         except queue.Empty:
             continue
 
@@ -66,6 +69,7 @@ def voice_worker():
     logging.info("Voice worker started")
     while True:
         try:
+            time.sleep(.01)
             task: VoiceGeneratorQueueItem = voice_queue.get(timeout=1)
             if task is None:
                 continue
