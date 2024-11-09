@@ -151,6 +151,9 @@ def check_json_subs_format(subs: List[dict]) -> bool:
 
         if not isinstance(sub["text"], str):
             return False
+        
+        if len(sub["text"]) == 0:
+            return False
 
         time_pattern = re.compile(r'^\d{2}:\d{2}:\d{2},\d{3}$')
         if not isinstance(sub["start"], str) or not time_pattern.match(sub["start"]):

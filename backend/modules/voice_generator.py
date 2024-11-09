@@ -22,6 +22,8 @@ class VoiceGenerator:
         os.makedirs(self.BASE_TEMP_FOLDER_NAME, exist_ok=True)
        
     def _synthesize(self, text_to_speak: str, speaker_ex_wav_filename: str, out_wav_filepath: str):
+        if len(text_to_speak) == 0:
+            raise KeyError("Error. Text to speak is empty.")
         self.tts.tts_to_file(text=text_to_speak, 
                              speaker_wav=speaker_ex_wav_filename, 
                              language=self.lang, 
