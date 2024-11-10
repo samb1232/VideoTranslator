@@ -150,7 +150,9 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
 
   return (
     <div className={styles.container}>
-      {processStatus == TaskStatus.idle && (
+      {![TaskStatus.queued, TaskStatus.processing].includes(
+        processStatus as TaskStatus
+      ) && (
         <div className={styles.subtitleList}>
           {subtitles.map((subtitle, index) => (
             <div key={subtitle.id} className={styles.subtitleItem}>
@@ -212,6 +214,11 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
           ))}
         </div>
       )}
+      {taskData.voice_generation_status == TaskStatus.error ? (
+        <div className={styles.wrongSubsFormat_div}>
+          Last generation process failed. Please check subs and try again.
+        </div>
+      ) : null}
       {wrongSubsFormat ? (
         <div className={styles.wrongSubsFormat_div}>
           Incorrect subs format! Please check the subs or reload page to reset
@@ -220,7 +227,9 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
       ) : null}
 
       <div className={styles_loading_anim.loader_container}>
-        {processStatus != TaskStatus.idle ? (
+        {[TaskStatus.queued, TaskStatus.processing].includes(
+          processStatus as TaskStatus
+        ) ? (
           <div className={styles_loading_anim.loader_roller}>
             <p className={styles_loading_anim.status_text}>
               Status: {processStatus}
@@ -233,7 +242,9 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
             onClick={handleGenerateVoice}
             disabled={
               !taskData.json_translated_subs_path ||
-              processStatus != TaskStatus.idle ||
+              [TaskStatus.queued, TaskStatus.processing].includes(
+                processStatus as TaskStatus
+              ) ||
               wrongSubsFormat
             }
           >

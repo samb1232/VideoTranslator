@@ -118,7 +118,9 @@ export default function VideoUploader({
         </label>
       </div>
       <div className={styles_loading_anim.loader_container}>
-        {processStatus != TaskStatus.idle ? (
+        {[TaskStatus.queued, TaskStatus.processing].includes(
+          processStatus as TaskStatus
+        ) ? (
           <>
             <div>Status: {processStatus}</div>
             <div className={styles_loading_anim.loader}></div>
@@ -131,7 +133,9 @@ export default function VideoUploader({
               videoFile == null ||
               languageFrom == "" ||
               languageTo == "" ||
-              processStatus != TaskStatus.idle
+              [TaskStatus.queued, TaskStatus.processing].includes(
+                processStatus as TaskStatus
+              )
             }
           >
             Create subtitles

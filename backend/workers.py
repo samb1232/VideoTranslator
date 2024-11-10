@@ -58,6 +58,11 @@ def subs_worker():
                 create_subs_task(task_id, vid_filepath, lang_from, lang_to)
             except Exception as e:
                 logging.error("Error in subs worker: " + str(e))
+                try:
+                    with app.app_context():
+                        db_operations.set_task_subs_generation_status(task_id=task_id,  status=TaskStatus.error)
+                except Exception as e:
+                    logging.error("Error updating subs task_status: " + str(e))
             finally:
                 subs_queue.task_done()
                 
@@ -87,6 +92,11 @@ def voice_worker():
                 
             except Exception as e:
                 logging.error("Error in voice worker: " + str(e))
+                try:
+                    with app.app_context():
+                        db_operations.set_task_voice_generation_status(task_id=task_id,  status=TaskStatus.error)
+                except Exception as e:
+                    logging.error("Error updating voice task_status: " + str(e))
             finally:
                 voice_queue.task_done()
         except queue.Empty:
