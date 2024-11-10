@@ -113,7 +113,7 @@ def register_routes(app):
             return jsonify({'status': 'error', "message":  "No subs for this task"}), 404
         
         try:
-            subs_arr = parse_json_to_subtitles(subs_path)
+            subs_arr = parse_json_to_subtitles(subs_path, strict_format=False)
             json_subs = get_subtitles_as_json_arr(subs_arr)
         except FileNotFoundError:
             return jsonify({'status': 'error', 'message': 'Subtitles file not found'}), 404

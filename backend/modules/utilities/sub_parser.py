@@ -29,7 +29,6 @@ class Subtitle:
         return f"Subtitle(number={self.id}, start_time={self.start_time}, end_time={self.end_time}, duration={self.duration}, speaker={self.speaker}, text={self.text}, modified={self.modified})"
 
 
-
 def export_subtitles_to_srt_file(subs_arr: List[Subtitle], output_srt_filepath: str):
     srt_output = ""
     for sub in subs_arr:
@@ -50,10 +49,10 @@ def get_subtitles_as_json_arr(subtitles: List[Subtitle]) -> List[dict]:
     return [subtitle.to_dict() for subtitle in subtitles]
 
 
-def parse_json_to_subtitles(json_filepath: str) -> List[Subtitle]:
+def parse_json_to_subtitles(json_filepath: str, strict_format: bool = True) -> List[Subtitle]:
     with open(json_filepath, 'r', encoding='utf-8') as file:
         subtitles_data = json.load(file)
-    if not check_json_subs_format(subtitles_data):
+    if strict_format and not check_json_subs_format(subtitles_data):
         raise ValueError("Invalid JSON format for subtitles")
 
     subtitles = []
@@ -152,7 +151,7 @@ def check_json_subs_format(subs: List[dict]) -> bool:
         if not isinstance(sub["text"], str):
             return False
         
-        if len(sub["text"]) == 0:
+        if len(sub["text"].strip()) == 0:
             return False
 
         time_pattern = re.compile(r'^\d{2}:\d{2}:\d{2},\d{3}$')
