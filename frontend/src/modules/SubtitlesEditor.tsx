@@ -25,6 +25,9 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [wrongSubsFormat, setWrongSubsFormat] = useState(false);
+  const [inputErrors, setInputErrors] = useState<{
+    [key: number]: { [key: string]: boolean };
+  }>({});
   const processStatus = taskData.voice_generation_status;
   const taskId = taskData.id;
 
@@ -59,6 +62,22 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
     return () => clearInterval(interval);
   }, [subtitles]);
 
+  function validateField(value: string, field: keyof Subtitle): boolean {
+    switch (field) {
+      case "start":
+      case "end":
+        const timePattern = /^\d{2}:\d{2}:\d{2},\d{3}$/;
+        return timePattern.test(value);
+      case "text":
+        return value.trim().length > 0;
+      case "speaker":
+        const speakerPattern = /^[A-Z]$/;
+        return speakerPattern.test(value);
+      default:
+        return true;
+    }
+  }
+
   const saveSubtitles = async () => {
     try {
       const response = await httpClient.post(
@@ -81,6 +100,23 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
     field: keyof Subtitle,
     value: string
   ) => {
+    const isValid = validateField(value, field);
+
+    const newErrors = { ...inputErrors };
+
+    if (!newErrors[index]) {
+      newErrors[index] = {};
+    }
+
+    if (isValid) {
+      delete newErrors[index]?.[field];
+    } else {
+      newErrors[index][field] = true;
+      setWrongSubsFormat(true);
+    }
+
+    setInputErrors(newErrors);
+
     const newSubtitles = subtitles.map((subtitle, i) =>
       i === index ? { ...subtitle, [field]: value, modified: true } : subtitle
     );
@@ -134,7 +170,9 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
                     onChange={(e) =>
                       handleInputChange(index, "speaker", e.target.value)
                     }
-                    className={styles.inputGroup + " " + styles.speaker}
+                    className={`${styles.inputGroup} ${styles.speaker} ${
+                      inputErrors[index]?.speaker ? styles.errorBorder : ""
+                    }`}
                   />
                 </div>
                 <div className={styles.start_end_time_div}>
@@ -144,7 +182,9 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
                     onChange={(e) =>
                       handleInputChange(index, "start", e.target.value)
                     }
-                    className={styles.inputGroup}
+                    className={`${styles.inputGroup} ${
+                      inputErrors[index]?.start ? styles.errorBorder : ""
+                    }`}
                   />
                   <div>→</div>
                   <input
@@ -153,7 +193,9 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
                     onChange={(e) =>
                       handleInputChange(index, "end", e.target.value)
                     }
-                    className={styles.inputGroup}
+                    className={`${styles.inputGroup} ${
+                      inputErrors[index]?.end ? styles.errorBorder : ""
+                    }`}
                   />
                 </div>
               </div>
@@ -162,7 +204,9 @@ function SubtitleEditor({ taskData, fetchTaskFunc }: SubtitleEditorProps) {
                 onChange={(e) =>
                   handleInputChange(index, "text", e.target.value)
                 }
-                className={styles.textarea}
+                className={`${styles.textarea} ${
+                  inputErrors[index]?.text ? styles.errorBorder : ""
+                }`}
               />
             </div>
           ))}

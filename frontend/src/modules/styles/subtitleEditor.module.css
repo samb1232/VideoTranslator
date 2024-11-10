@@ -104,3 +104,6 @@
     font-size: 14px;
   }
   
+  .errorBorder {
+    background-color: #ff2c4f;
+  }
