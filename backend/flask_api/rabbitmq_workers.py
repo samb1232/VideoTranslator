@@ -29,27 +29,23 @@ class RabbitMQProducer:
         logger.info("RabbitMQ producer channel connected")
 
     def add_task_to_subs_gen_queue(self, task: SubsGenQueueItem):
-        db_operations.set_task_subs_generation_status(task_id=task.task_id, status=TaskStatus.QUEUED)
         self.channel.basic_publish(
             exchange='',
             routing_key=ConfigWeb.RABBITMQ_SUBS_GEN_QUEUE,
             body=task.to_json(),
-            properties=pika.BasicProperties(
-            delivery_mode=2,  # make message persistent
-            )
+            properties=pika.BasicProperties(delivery_mode=2,)# make message persistent
         )
+        db_operations.set_task_subs_generation_status(task_id=task.task_id, status=TaskStatus.QUEUED)
         logger.debug(f"Task {task.task_id} added to subs generation queue")
 
     def add_task_to_voice_gen_queue(self, task: VoiceGenQueueItem):
-        db_operations.set_task_voice_generation_status(task_id=task.task_id, status=TaskStatus.QUEUED)
         self.channel.basic_publish(
             exchange='',
             routing_key=ConfigWeb.RABBITMQ_VOICE_GEN_QUEUE,
             body=task.to_json(),
-            properties=pika.BasicProperties(
-            delivery_mode=2,  # make message persistent
-            )
+            properties=pika.BasicProperties(delivery_mode=2,)# make message persistent
         )
+        db_operations.set_task_voice_generation_status(task_id=task.task_id, status=TaskStatus.QUEUED)
         logger.debug(f"Task {task.task_id} added to voice generation queue")
 
     def close(self):
