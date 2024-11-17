@@ -15,6 +15,8 @@ logger = setup_logging()
 rabbitmq_host = os.getenv('RABBITMQ_HOST', 'localhost')
 rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
 
+voice_generator = VoiceGenerator()
+
 
 def callback(ch: BlockingChannel, method: Basic.Deliver, properties: BasicProperties, body: str | bytes):
     #TODO: сделать проверку body json на корректность
@@ -66,11 +68,11 @@ def generate_voice(task: VoiceGenQueueItem):
     final_audio_filepath = os.path.join(task_folder, f"{task.task_id}_audio_{task.lang_to}.wav")
     final_video_filepath = os.path.join(task_folder, f"{task.task_id}_vid_{task.lang_to}.mp4")
 
-    voice_generator = VoiceGenerator(task.lang_to)
     voice_generator.generate_audio(
         orig_wav_filepath=task.src_audio_path,
+        language=task.lang_to,
         json_subs_filepath=task.json_subs_path,
-        out_wav_filepath=final_audio_filepath
+        out_wav_filepath=final_audio_filepath,
         )
     voice_generator.replace_audio_in_video(
         in_audio_path=final_audio_filepath,
