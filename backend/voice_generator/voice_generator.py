@@ -76,14 +76,14 @@ class VoiceGenerator:
         cnt = 1
         last = len(subtitles_arr)
         for subtitle in subtitles_arr:
-            logger.debug(f"Progress: {cnt}/{last}")
+            logger.debug(f"Progress: {cnt}/{last}. Synthesysing text: \"{subtitle.text}\"")
             cnt += 1
             path_to_subtitle = f"{self.path_to_temp_folder}/{subtitle.id}.wav"
             path_to_subtitle_adj = f"{self.path_to_temp_folder}/{subtitle.id}_adj.wav"
             path_to_speaker_ex = speakers_voices[subtitle.speaker]
 
             if not subtitle.modified and os.path.exists(path_to_subtitle_adj):
-                logger.debug(f"Skipping {cnt}...")
+                logger.debug(f"Skipping...")
                 continue
 
             self._synthesize(subtitle.text, path_to_speaker_ex, path_to_subtitle, language)
