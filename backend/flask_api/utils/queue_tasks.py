@@ -9,13 +9,12 @@ class RabbitMqOperationTypes(Enum):
     VOICE_GEN = auto()
 
 
-
 class SubsGenQueueItem:
-    def __init__(self, task_id, vid_filepath, lang_from, lang_to):
-        self.task_id: str = task_id
-        self.vid_filepath: str = vid_filepath
-        self.lang_from: str = lang_from
-        self.lang_to: str = lang_to
+    def __init__(self, task_id: str, vid_filepath: str, lang_from: str, lang_to: str):
+        self.task_id = task_id
+        self.vid_filepath = vid_filepath
+        self.lang_from = lang_from
+        self.lang_to = lang_to
 
     def to_json(self) -> str:
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -27,11 +26,11 @@ class SubsGenQueueItem:
 
 
 class SubsGenResultsItem:
-    def __init__(self, src_audio_path, srt_orig_subs_path, srt_translated_subs_path, json_translated_subs_path):
-        self.src_audio_path: str = src_audio_path
-        self.srt_orig_subs_path: str = srt_orig_subs_path
-        self.srt_translated_subs_path: str = srt_translated_subs_path
-        self.json_translated_subs_path: str = json_translated_subs_path 
+    def __init__(self, src_audio_path: str, srt_orig_subs_path: str, srt_translated_subs_path: str, json_translated_subs_path: str):
+        self.src_audio_path = src_audio_path
+        self.srt_orig_subs_path = srt_orig_subs_path
+        self.srt_translated_subs_path = srt_translated_subs_path
+        self.json_translated_subs_path = json_translated_subs_path 
     
     def to_json(self) -> str:
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -43,12 +42,12 @@ class SubsGenResultsItem:
 
 
 class VoiceGenQueueItem:
-    def __init__(self, task_id, src_audio_path, src_video_path, json_subs_path, lang_to):
-        self.task_id: str = task_id
-        self.src_audio_path: str = src_audio_path
-        self.src_video_path: str = src_video_path
-        self.json_subs_path: str = json_subs_path
-        self.lang_to: str = lang_to
+    def __init__(self, task_id: str, src_audio_path: str, src_video_path: str, json_subs_path: str, lang_to: str):
+        self.task_id = task_id
+        self.src_audio_path = src_audio_path
+        self.src_video_path = src_video_path
+        self.json_subs_path = json_subs_path
+        self.lang_to = lang_to
 
     def to_json(self) -> str:
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -60,9 +59,9 @@ class VoiceGenQueueItem:
  
  
 class VoiceGenResultsItem:
-    def __init__(self, translated_audio_path, translated_video_path):
-        self.translated_audio_path: str = translated_audio_path
-        self.translated_video_path: str = translated_video_path
+    def __init__(self, translated_audio_path: str, translated_video_path: str):
+        self.translated_audio_path = translated_audio_path
+        self.translated_video_path = translated_video_path
     
     def to_json(self) -> str:
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)

@@ -2,7 +2,7 @@ import os
 from config import ConfigWeb
 
 
-def save_file(file, extension, task_id):
+def save_file(file, extension: str, task_id: str):
     task_folder = get_task_folder(task_id)
     filepath = os.path.join(task_folder, f"{task_id}.{extension}")
     file.save(filepath)
