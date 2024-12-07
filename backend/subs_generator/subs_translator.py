@@ -1,8 +1,9 @@
 import time
+from typing import List
 from deep_translator import GoogleTranslator
 
 import config
-from utils import sub_parser
+from shared_utils.sub_parser import Subtitle, export_subtitles_to_json_file, export_subtitles_to_srt_file, parse_json_to_subtitles, parse_srt_to_subtitles
 from utils.my_yandex_translator import MyYandexTranslator
 
 
@@ -34,9 +35,9 @@ class SubsTranslator:
         """
         Translate a subtitle .SRT file from original language to desired language.
         """
-        subs_arr = sub_parser.parse_srt_to_subtitles(input_file_path)
+        subs_arr = parse_srt_to_subtitles(input_file_path)
         subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
-        sub_parser.export_subtitles_to_srt_file(subs_translated_arr, output_file_path)
+        export_subtitles_to_srt_file(subs_translated_arr, output_file_path)
 
         print("New file: ", output_file_path)
 
@@ -44,9 +45,9 @@ class SubsTranslator:
         """
         Translate a subtitle .JSON file from original language to desired language.
         """
-        subs_arr = sub_parser.parse_json_to_subtitles(input_file_path)
+        subs_arr = parse_json_to_subtitles(input_file_path)
         subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
-        sub_parser.export_subtitles_to_json_file(subs_translated_arr, output_file_path)
+        export_subtitles_to_json_file(subs_translated_arr, output_file_path)
 
         print("New file: ", output_file_path)
 
@@ -54,7 +55,7 @@ class SubsTranslator:
         final_arr = text.split("\n\n")
         return final_arr[:-1]
 
-    def _translate_subtitles(self, subs_arr, translation_limit, end_line_separator):
+    def _translate_subtitles(self, subtitles: List[Subtitle], translation_limit: int, end_line_separator: str):
         """
         Translate a list of subtitles from original language to desired language.
 
@@ -67,10 +68,10 @@ class SubsTranslator:
         subs_translated_arr = []
         translated_subs_counter = 0
 
-        for sub_index in range(len(subs_arr) + 1):
-            is_last = sub_index == len(subs_arr)
+        for sub_index in range(len(subtitles) + 1):
+            is_last = sub_index == len(subtitles)
             if not is_last:
-                sub_text = subs_arr[sub_index].text
+                sub_text = subtitles[sub_index].text
             else:
                 sub_text = ""
 
@@ -84,8 +85,8 @@ class SubsTranslator:
                     print(f"WARNING: incorrect translation: translated_arr len is {len(translated_arr)}, but should be {translated_arr_correct_len}")
 
                 for i in range(len(translated_arr)):
-                    old_sub = subs_arr[translated_subs_counter + i]
-                    new_sub = sub_parser.Subtitle(
+                    old_sub = subtitles[translated_subs_counter + i]
+                    new_sub = Subtitle(
                         id=old_sub.id,
                         speaker=old_sub.speaker,
                         start_time=old_sub.start_time,

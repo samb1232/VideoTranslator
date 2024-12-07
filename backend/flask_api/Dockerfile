@@ -6,8 +6,8 @@ WORKDIR /app
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
+COPY ./shared_utils ./shared_utils
 COPY ./database ./database
-COPY ./utils ./utils
 COPY ./config.py ./app.py ./routes.py ./rabbitmq_workers.py ./logging_conf.py ./users.json ./wait-for-it.sh ./
 
 EXPOSE 5000

@@ -1,5 +1,7 @@
 import os
-from config import ConfigWeb
+
+
+UPLOAD_FOLDER = "uploads"
 
 
 def save_file(file, extension: str, task_id: str):
@@ -10,6 +12,6 @@ def save_file(file, extension: str, task_id: str):
 
 
 def get_task_folder(task_id: str):
-    folder_path = os.path.join(ConfigWeb.UPLOAD_FOLDER, task_id)
+    folder_path = os.path.join(UPLOAD_FOLDER, task_id)
     os.makedirs(folder_path, exist_ok=True)
     return folder_path

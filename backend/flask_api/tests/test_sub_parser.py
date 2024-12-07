@@ -1,5 +1,5 @@
 import pytest
-from flask_api.utils.sub_parser import Subtitle, export_subtitles_to_srt_file, export_subtitles_to_json_file, parse_json_to_subtitles, parse_srt_to_subtitles, format_time_ms_to_str, format_time_str_to_ms, check_json_subs_format
+from shared_utils.sub_parser import Subtitle, export_subtitles_to_srt_file, export_subtitles_to_json_file, parse_json_to_subtitles, format_time_ms_to_str, format_time_str_to_ms, validate_json_subs_format
 
 
 def test_subtitle_initialization():
@@ -107,22 +107,6 @@ def test_parse_json_to_subtitles(tmp_path):
     assert subtitles[1].modified is True
 
 
-def test_parse_srt_to_subtitles(tmp_path):
-    srt_content = "1\n00:00:01,000 --> 00:00:02,000\nHello, world!\n\n2\n00:00:03,000 --> 00:00:04,000\nGoodbye, world!\n\n"
-    srt_file = tmp_path / "subtitles.srt"
-    with open(srt_file, "w", encoding="utf-8") as f:
-        f.write(srt_content)
-    subtitles = parse_srt_to_subtitles(srt_file)
-    assert len(subtitles) == 2
-    assert subtitles[0].id == 1
-    assert subtitles[0].start_time == 1000
-    assert subtitles[0].end_time == 2000
-    assert subtitles[0].text == "Hello, world!"
-    assert subtitles[1].id == 2
-    assert subtitles[1].start_time == 3000
-    assert subtitles[1].end_time == 4000
-    assert subtitles[1].text == "Goodbye, world!"
-
 
 @pytest.mark.parametrize(
     "int_num, str_num",
@@ -176,5 +160,5 @@ def test_check_json_subs_format():
             "modified": True,
         }
     ]
-    assert check_json_subs_format(valid_subs) is True
-    assert check_json_subs_format(invalid_subs) is False
+    assert validate_json_subs_format(valid_subs) is True
+    assert validate_json_subs_format(invalid_subs) is False

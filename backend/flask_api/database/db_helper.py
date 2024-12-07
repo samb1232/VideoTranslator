@@ -5,10 +5,10 @@ from typing import List
 from sqlalchemy.exc import SQLAlchemyError
 from logging_conf import setup_logging
 from database.db_base import db_base
-from utils.task_status_enum import TaskStatus
 from database.models import Task, User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+from shared_utils.task_status_enum import TaskStatus
 
 
 logger = setup_logging()

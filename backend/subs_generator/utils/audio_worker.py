@@ -21,5 +21,3 @@ def extract_audio_from_video(video_path: str, audio_output_path: str):
     audio = video.audio
     audio.write_audiofile(audio_output_path)
     video.close()
-
-

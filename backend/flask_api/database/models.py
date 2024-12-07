@@ -2,7 +2,7 @@ import sqlalchemy as db
 from uuid import uuid4
 
 from database.db_base import db_base
-from utils.task_status_enum import TaskStatus
+from shared_utils.task_status_enum import TaskStatus
 
 def get_uuid() -> str:
     return uuid4().hex

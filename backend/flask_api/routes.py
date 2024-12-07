@@ -4,9 +4,9 @@ from flask import Blueprint, jsonify, request, send_from_directory, session, cur
 from database.db_helper import DbHelper
 from logging_conf import setup_logging
 from rabbitmq_workers import RabbitMQConsumer, RabbitMQProducer
-from utils.queue_tasks import SubsGenQueueItem, VoiceGenQueueItem
-from utils.sub_parser import check_json_subs_format, get_subtitles_as_json_arr, parse_json_to_subtitles
-from utils.file_utils import save_file
+from shared_utils.queue_tasks import SubsGenQueueItem, VoiceGenQueueItem
+from shared_utils.sub_parser import validate_json_subs_format, convert_subtitles_to_json_arr, parse_json_to_subtitles
+from shared_utils.file_utils import save_file
 
 
 logger = setup_logging()
@@ -132,8 +132,8 @@ def get_json_subs(task_id):
         return jsonify({'status': 'error', "message":  "No subs for this task"}), 404
         
     try:
-        subs_arr = parse_json_to_subtitles(subs_path, strict_format=False)
-        json_subs = get_subtitles_as_json_arr(subs_arr)
+        subs_arr = parse_json_to_subtitles(subs_path)
+        json_subs = convert_subtitles_to_json_arr(subs_arr)
     except FileNotFoundError:
         return jsonify({'status': 'error', 'message': 'Subtitles file not found'}), 404
     except json.JSONDecodeError:
@@ -148,7 +148,7 @@ async def save_subs(task_id):
         new_subs = request.json.get('json_subs')
         if new_subs is None:
             return jsonify({'status': 'error', 'message': 'No subtitles provided'}), 400
-        is_valid = check_json_subs_format(new_subs)
+        is_valid = validate_json_subs_format(new_subs)
 
         if not is_valid:
             return jsonify({'status': 'error', 'message': 'Invalid subtitles format'}), 200

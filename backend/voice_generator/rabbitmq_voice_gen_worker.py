@@ -1,14 +1,15 @@
 import os
 import pika
-from utils.rabbitmq_base import RabbitMQBase
-from logging_conf import setup_logging
-from utils.task_status_enum import TaskStatus
-from voice_generator import VoiceGenerator
-from utils.file_utils import get_task_folder
-from utils.queue_tasks import RabbitMqOperationTypes, ResultsQueueItem, VoiceGenQueueItem, VoiceGenResultsItem
 import config
+from shared_utils.rabbitmq_base import RabbitMQBase
+from shared_utils.task_status_enum import TaskStatus
+from shared_utils.file_utils import get_task_folder
+from shared_utils.queue_tasks import RabbitMqOperationTypes, ResultsQueueItem, VoiceGenQueueItem, VoiceGenResultsItem
+from logging_conf import setup_logging
+from voice_generator import VoiceGenerator
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
+
 
 logger = setup_logging()
 

@@ -4,7 +4,9 @@ from config import AAI_API_KEY
 import assemblyai as aai
 
 from utils.audio_worker import extract_audio_from_video
-from utils.sub_parser import export_subtitles_to_json_file, split_utterances_to_subtitles
+from shared_utils.sub_parser import export_subtitles_to_json_file
+from utils.subtitle_splitter import SubtitleSplitter
+
 
 class SubsGenerator:
     """Module for generating subtitles on original language"""
@@ -42,10 +44,10 @@ class SubsGenerator:
 
         # Export subtitles as json
         self.json_out_filepath = os.path.join(output_dir,  f"{out_filename}_src.json")
-        subs_arr = split_utterances_to_subtitles(transcript.utterances)
-        export_subtitles_to_json_file(subs_arr, self.json_out_filepath)
+        sub_splitter = SubtitleSplitter()
+        subtitles = sub_splitter.split_utterances_to_subtitles(transcript.utterances)
+        export_subtitles_to_json_file(subtitles, self.json_out_filepath)
         
-    
     def get_audio_out_filepath(self):
         return self.audio_file_path
     

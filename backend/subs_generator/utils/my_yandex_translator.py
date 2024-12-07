@@ -1,5 +1,6 @@
 import requests
 
+
 class MyYandexTranslator:
     def __init__(self, api_key, folder_id, src_lang, dest_lang):
         self.api_key = api_key

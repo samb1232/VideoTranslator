@@ -1,13 +1,13 @@
 import os
 import time
-from pydub import AudioSegment
 import torch
-from TTS.api import TTS
 from audiostretchy.stretch import stretch_audio
+from pydub import AudioSegment
+from TTS.api import TTS
 from logging_conf import setup_logging
 from utils import audio_worker
-from utils.sub_parser import parse_json_to_subtitles, export_subtitles_to_json_file
-from utils.voice_extractor import extract_speaker_voices
+from utils.voice_extractor import extract_speaker_voices_from_audio
+from shared_utils.sub_parser import parse_json_to_subtitles, export_subtitles_to_json_file
 
 logger = setup_logging()
 
@@ -65,17 +65,17 @@ class VoiceGenerator:
         self.path_to_temp_folder = os.path.join(self.BASE_TEMP_FOLDER_NAME, temp_folder_name)
         os.makedirs(self.path_to_temp_folder, exist_ok=True)
 
-        subtitles_arr = parse_json_to_subtitles(json_subs_filepath)
+        subtitles = parse_json_to_subtitles(json_subs_filepath)
         temp_speakers_folder = os.path.join(self.path_to_temp_folder, "speakers_wav")
-        speakers_voices = extract_speaker_voices(
+        speakers_voices = extract_speaker_voices_from_audio(
             audio_filepath=orig_wav_filepath,
-            subtitles=subtitles_arr,
-            out_folder=temp_speakers_folder
+            subtitles=subtitles,
+            out_folder_name=temp_speakers_folder
         )
 
         cnt = 1
-        last = len(subtitles_arr)
-        for subtitle in subtitles_arr:
+        last = len(subtitles)
+        for subtitle in subtitles:
             logger.debug(f"Progress: {cnt}/{last}. Synthesysing text: \"{subtitle.text}\"")
             cnt += 1
             path_to_subtitle = f"{self.path_to_temp_folder}/{subtitle.id}.wav"
@@ -94,9 +94,9 @@ class VoiceGenerator:
                                      )
             subtitle.modified = False
         
-        export_subtitles_to_json_file(subtitles_arr, json_subs_filepath)
+        export_subtitles_to_json_file(subtitles, json_subs_filepath)
 
-        self._merge_audios(subtitles_arr, out_wav_filepath)
+        self._merge_audios(subtitles, out_wav_filepath)
         
 
     @staticmethod

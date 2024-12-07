@@ -1,11 +1,8 @@
 import threading
 import time
-from logging_conf import setup_logging
 import pika
 from pika.exceptions import StreamLostError
 
-
-logger = setup_logging()
 
 class RabbitMQBase:
     def __init__(self, rabbitmq_host):
@@ -21,10 +18,8 @@ class RabbitMQBase:
             )
         )
         self.channel = self.connection.channel()
-        logger.info("RabbitMQ channel connected")
 
     def _reconnect(self):
-        logger.info("Reconnecting to RabbitMQ...")
         self._connect()
 
     def _send_heartbeat(self):
@@ -33,17 +28,13 @@ class RabbitMQBase:
                 self.connection.process_data_events()
                 time.sleep(10)
             except StreamLostError as e:
-                logger.error(f"Error in heartbeat: {e}")
                 self._reconnect()
             except Exception as e:
-                logger.error(f"Unknown exception: {e}")
                 self._reconnect()
 
     def close(self):
         try:
             self.channel.close()
-        except Exception as e:
-            logger.error(f"Error closing channel: {e}")
         finally:
             self.connection.close()
-            logger.info("RabbitMQ connection closed")
+

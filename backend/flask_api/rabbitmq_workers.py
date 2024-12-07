@@ -3,11 +3,11 @@ import pika
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
 from pika.exceptions import StreamLostError
-from utils.rabbitmq_base import RabbitMQBase
+from shared_utils.rabbitmq_base import RabbitMQBase
 from logging_conf import setup_logging
 from database.db_helper import DbHelper
-from utils.task_status_enum import TaskStatus
-from utils.queue_tasks import RabbitMqOperationTypes, ResultsQueueItem, SubsGenQueueItem, SubsGenResultsItem, VoiceGenQueueItem, VoiceGenResultsItem
+from shared_utils.task_status_enum import TaskStatus
+from shared_utils.queue_tasks import RabbitMqOperationTypes, ResultsQueueItem, SubsGenQueueItem, SubsGenResultsItem, VoiceGenQueueItem, VoiceGenResultsItem
 from config import ConfigWeb
 
 logger = setup_logging()

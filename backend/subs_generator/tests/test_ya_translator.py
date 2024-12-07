@@ -1,7 +1,7 @@
 import pytest
 import requests_mock
 
-from speech_to_text.utils.my_yandex_translator import MyYandexTranslator
+from utils.my_yandex_translator import MyYandexTranslator
 
 @pytest.fixture
 def translator():

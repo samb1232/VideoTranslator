@@ -1,7 +1,7 @@
 from enum import Enum, auto
 import json
 
-from utils.task_status_enum import TaskStatus
+from shared_utils.task_status_enum import TaskStatus
 
     
 class RabbitMqOperationTypes(Enum):
