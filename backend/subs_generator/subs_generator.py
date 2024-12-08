@@ -9,7 +9,7 @@ from utils.subtitle_splitter import SubtitleSplitter
 
 
 class SubsGenerator:
-    """Module for generating subtitles on original language"""
+    """Module for generating subtitles in original language"""
 
     def __init__(self, src_lang: str, num_of_speakers: int = None) -> None:
         aai.settings.api_key = AAI_API_KEY
@@ -36,17 +36,22 @@ class SubsGenerator:
         
         transcript = aai.Transcriber().transcribe(self.audio_file_path, self.aai_conf)
 
-        # Export subtitles as srt
-        subtitles = transcript.export_subtitles_srt()
         self.srt_out_filepath = os.path.join(output_dir, f"{out_filename}_src.srt")
-        with open(self.srt_out_filepath, "w", encoding="utf-8") as srt_file:
-            srt_file.write(subtitles)
+        self._save_subtitles_to_srt(transcript, self.srt_out_filepath)
 
-        # Export subtitles as json
         self.json_out_filepath = os.path.join(output_dir,  f"{out_filename}_src.json")
+        self._save_subtitles_to_json(transcript, self.json_out_filepath)
+        
+    
+    def _save_subtitles_to_srt(self, transcript: aai.Transcript, srt_filepath: str):
+        subtitles = transcript.export_subtitles_srt()
+        with open(srt_filepath, "w", encoding="utf-8") as srt_file:
+            srt_file.write(subtitles)
+        
+    def _save_subtitles_to_json(self, transcript: aai.Transcript, json_filepath: str):
         sub_splitter = SubtitleSplitter()
         subtitles = sub_splitter.split_utterances_to_subtitles(transcript.utterances)
-        export_subtitles_to_json_file(subtitles, self.json_out_filepath)
+        export_subtitles_to_json_file(subtitles, json_filepath)
         
     def get_audio_out_filepath(self):
         return self.audio_file_path
