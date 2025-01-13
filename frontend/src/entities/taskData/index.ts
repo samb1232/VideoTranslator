@@ -1,0 +1,1 @@
+export type { TaskData } from "./model/taskData";
