@@ -1,0 +1,63 @@
+  .loading_tasks_div {
+    margin: auto;
+    width: 30%;
+  }
+
+  .task_table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+    text-align: left;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .task_table th,
+  .task_table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+  }
+  
+  .task_table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .task_table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .task_table tr:hover {
+    background-color: #f1f1f1;
+    cursor: default;
+  }
+  
+  .task_table td:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
+  
+  .task_table td:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+  
+  .task_table th:first-child {
+    border-top-left-radius: 8px;
+  }
+  
+  .task_table th:last-child {
+    border-top-right-radius: 8px;
+  }
+  
+  .task_table a {
+    text-decoration: none;
+    color: #666666;
+  }
+  
+  .task_table a:hover {
+    text-decoration: underline;
+  }
