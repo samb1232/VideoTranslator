@@ -1,44 +1,23 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 import styles from "./styles/home.module.css";
-import { User } from "../../../entities/user/user";
-import { SERVER_URL } from "../../../shared/const/serverUrl";
-import httpClient from "../../../shared/api/axiosInstance";
 import { TaskTable } from "../../../features/taskTable";
 import { CreateNewTaskForm } from "../../../features/createNewTaskForm";
+import { useHomePage } from "../model/useHomePage";
 
 export function HomePage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const navigate = useNavigate();
+  const {
+    user,
+    isModalOpen,
+    setIsModalOpen,
+    logoutUser,
+    openModal,
+    fetchUserInfo,
+  } = useHomePage();
 
   useEffect(() => {
-    getUserInfo();
+    fetchUserInfo();
   }, []);
-
-  const logoutUser = async () => {
-    await httpClient.post(`${SERVER_URL}/logout`);
-    navigate("/login", { replace: true });
-  };
-
-  const getUserInfo = async () => {
-    try {
-      const resp = await httpClient.get(`${SERVER_URL}/@me`);
-      if (resp.data) {
-        setUser(resp.data);
-      } else {
-        navigate("/login", { replace: true });
-      }
-    } catch (error) {
-      navigate("/login", { replace: true });
-    }
-  };
-
-  const openModal = () => {
-    setIsModalOpen(true);
-  };
 
   return (
     <div className={styles.body}>
