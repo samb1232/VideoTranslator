@@ -1,50 +1,18 @@
 import styles from "./styles/loginForm.module.css";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { checkAuth, loginUser } from "../api/loginApi";
+import { useLoginForm } from "../model/useLoginForm";
 import { LoadingAnimBlock } from "../../../entities/loadingAnimBlock";
 import { ErrorMessage } from "../../../entities/errorMessage";
 
 export function LoginForm() {
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setErrorMessage] = useState<string>("");
-  const [processing, setProcessing] = useState<boolean>(false);
-  const navigate = useNavigate();
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    try {
-      setProcessing(true);
-      const response = await loginUser(username, password);
-
-      if (response.status === 200) {
-        navigate("/", { replace: true });
-      } else {
-        setErrorMessage("An error occurred while logging in");
-      }
-    } catch (error: any) {
-      console.error("Error logging in:", error);
-      if (error.status === 401) {
-        setErrorMessage("Invalid username or password");
-      } else {
-        setErrorMessage("An error occurred while logging in");
-      }
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await checkAuth();
-        if (resp.data) {
-          navigate("/", { replace: true });
-        }
-      } catch (error) {}
-    })();
-  }, [navigate]);
+  const {
+    username,
+    password,
+    error,
+    processing,
+    setUsername,
+    setPassword,
+    handleSubmit,
+  } = useLoginForm();
 
   return (
     <form className={styles.login_form} onSubmit={handleSubmit}>
