@@ -6,8 +6,8 @@ import httpClient from "../../../shared/api/axiosInstance";
 import styles from "./styles/subtitleEditor.module.css";
 import { ErrorMessage } from "../../../entities/errorMessage";
 import { LoadingAnimBlock } from "../../../entities/loadingAnimBlock";
-import { TaskData } from "../../../entities/task/model/taskData";
-import { TaskStatus } from "../../../entities/task/model/taskStatus";
+import { TaskData } from "../../../entities/task";
+import { TaskStatus } from "../../../entities/task";
 
 interface Subtitle {
   id: number;

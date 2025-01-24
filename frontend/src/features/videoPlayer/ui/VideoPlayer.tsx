@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { SERVER_URL } from "../../../shared/const/serverUrl";
 import httpClient from "../../../shared/api/axiosInstance";
 import { ErrorMessage } from "../../../entities/errorMessage";
-import { TaskData } from "../../../entities/task/model/taskData";
+import { TaskData } from "../../../entities/task";
 
 interface VideoPlayerProps {
   taskData: TaskData;

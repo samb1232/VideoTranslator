@@ -14,8 +14,8 @@ import { VideoUploader } from "../../../features/videoUploader";
 import { SubtitleEditor } from "../../../features/subtitlesEditor";
 import { VideoPlayer } from "../../../features/videoPlayer";
 import { DownloadButton } from "../../../features/downloadButton";
-import { TaskData } from "../../../entities/task/model/taskData";
-import { TaskStatus } from "../../../entities/task/model/taskStatus";
+import { TaskData } from "../../../entities/task";
+import { TaskStatus } from "../../../entities/task";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const taskId = params.taskId;

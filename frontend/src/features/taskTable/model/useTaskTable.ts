@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { fetchTasks } from "../api/fetchTasks";
-import { TaskData } from "../../../entities/task/model/taskData";
-import { TaskStatus } from "../../../entities/task/model/taskStatus";
+import { TaskData } from "../../../entities/task";
+import { TaskStatus } from "../../../entities/task";
 
 export function useTaskTable() {
   const [tasks, setTasks] = useState<TaskData[]>([]);

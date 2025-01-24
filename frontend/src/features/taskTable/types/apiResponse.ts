@@ -1,4 +1,4 @@
-import { TaskData } from "../../../entities/task/model/taskData";
+import { TaskData } from "../../../entities/task";
 
 export interface ApiResponse {
     status: string;
