@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import styles from "./styles/videoUploader.module.css";
 import { SERVER_URL } from "../../../shared/const/serverUrl";
 import httpClient from "../../../shared/api/axiosInstance";
-import { TaskData } from "../../../entities/task/taskData";
-import { TaskStatus } from "../../../entities/task/taskStatus";
 import { ErrorMessage } from "../../../entities/errorMessage";
 import { LoadingAnimBlock } from "../../../entities/loadingAnimBlock";
+import { TaskData } from "../../../entities/task/model/taskData";
+import { TaskStatus } from "../../../entities/task/model/taskStatus";
 
 const languages = [
   { value: "", label: "Select language" },

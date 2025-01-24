@@ -5,7 +5,7 @@ import styles from "./styles/home.module.css";
 import { User } from "../../../entities/user/user";
 import { SERVER_URL } from "../../../shared/const/serverUrl";
 import httpClient from "../../../shared/api/axiosInstance";
-import { TaskTable } from "../../../entities/TaskTable";
+import { TaskTable } from "../../../features/taskTable";
 import { CreateNewTaskForm } from "../../../features/createNewTaskForm";
 
 export function HomePage() {

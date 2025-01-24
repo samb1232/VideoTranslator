@@ -10,12 +10,12 @@ import httpClient from "../../../shared/api/axiosInstance";
 
 import styles from "./styles/taskPage.module.css";
 import { useEffect, useState } from "react";
-import { TaskData } from "../../../entities/task/taskData";
-import { TaskStatus } from "../../../entities/task/taskStatus";
 import { VideoUploader } from "../../../features/videoUploader";
 import { SubtitleEditor } from "../../../features/subtitlesEditor";
 import { VideoPlayer } from "../../../features/videoPlayer";
 import { DownloadButton } from "../../../features/downloadButton";
+import { TaskData } from "../../../entities/task/model/taskData";
+import { TaskStatus } from "../../../entities/task/model/taskStatus";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const taskId = params.taskId;

@@ -1,57 +1,10 @@
 import styles from "./styles/taskTable.module.css";
-import { useEffect, useState } from "react";
-import { TaskData } from "../../task/taskData";
-import { SERVER_URL } from "../../../shared/const/serverUrl";
-import httpClient from "../../../shared/api/axiosInstance";
-import { ApiResponse } from "../../task/apiResponse";
-import { TaskStatus } from "../../task/taskStatus";
-import { formatDate } from "../../../shared/utils/dateFormatter";
 import { Link } from "react-router-dom";
+import { useTaskTable } from "../model/useTaskTable";
+import { formatDate } from "../../../shared/utils/dateFormatter";
 
 export function TaskTable() {
-  const [tasks, setTasks] = useState<TaskData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  async function fetchTasks() {
-    try {
-      const response = await httpClient.get<ApiResponse>(
-        `${SERVER_URL}/get_all_tasks`
-      );
-      if (response.data.status === "success") {
-        setTasks(response.data.tasks);
-      } else {
-        setError("Failed to fetch tasks");
-      }
-    } catch (err) {
-      setError("Error fetching tasks");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function getTaskStatus(
-    subs_gen_status: string,
-    voice_gen_status: string
-  ): string {
-    const statuses = [subs_gen_status, voice_gen_status];
-    const priorities = [
-      TaskStatus.processing,
-      TaskStatus.queued,
-      TaskStatus.idle,
-    ];
-
-    for (const priority of priorities) {
-      if (statuses.includes(priority)) {
-        return priority;
-      }
-    }
-    return "";
-  }
+  const { tasks, loading, error, getTaskStatus } = useTaskTable();
 
   return (
     <div>
@@ -71,7 +24,6 @@ export function TaskTable() {
               <th>Lang To</th>
               <th>Creator</th>
               <th>Status</th>
-              {/* <th>YT Channel</th> */}
               <th>YT Name</th>
               <th>YT Orig URL</th>
               <th>YT Our URL</th>
@@ -97,7 +49,6 @@ export function TaskTable() {
                     task.voice_generation_status
                   )}
                 </td>
-                {/* <td>{task.yt_channel}</td> */}
                 <td>{task.yt_name}</td>
                 <td>{task.yt_orig_url}</td>
                 <td>{task.yt_our_url}</td>

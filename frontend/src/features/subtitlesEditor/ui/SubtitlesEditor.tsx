@@ -4,10 +4,10 @@ import { SERVER_URL } from "../../../shared/const/serverUrl";
 import httpClient from "../../../shared/api/axiosInstance";
 
 import styles from "./styles/subtitleEditor.module.css";
-import { TaskData } from "../../../entities/task/taskData";
 import { ErrorMessage } from "../../../entities/errorMessage";
-import { TaskStatus } from "../../../entities/task/taskStatus";
 import { LoadingAnimBlock } from "../../../entities/loadingAnimBlock";
+import { TaskData } from "../../../entities/task/model/taskData";
+import { TaskStatus } from "../../../entities/task/model/taskStatus";
 
 interface Subtitle {
   id: number;
