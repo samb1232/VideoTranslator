@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-
-import { SERVER_URL } from "../../../shared/const/serverUrl";
 import httpClient from "../../../shared/api/axiosInstance";
 
 import styles from "./styles/subtitleEditor.module.css";
-import { ErrorMessage } from "../../../entities/errorMessage";
-import { LoadingAnimBlock } from "../../../entities/loadingAnimBlock";
-import { TaskData } from "../../../entities/task";
-import { TaskStatus } from "../../../entities/task";
+import styles_err_message from "../../../entities/errorMessage/ui/styles/errorMessage.module.css";
+import styles_loading_anim from "../../../entities/loadingAnimBlock/ui/styles/loadingAnimBlock.module.css";
+import { TaskData, TaskStatus } from "../../../entities/task";
+import { SERVER_URL } from "../../../shared/const/serverUrl";
 
 interface Subtitle {
   id: number;
@@ -150,7 +148,7 @@ export function SubtitleEditor({
   };
 
   if (error) {
-    return <ErrorMessage error={error} />;
+    return <div className={styles_err_message.error_message_div}>{error}</div>;
   }
 
   return (
@@ -231,25 +229,32 @@ export function SubtitleEditor({
         </div>
       ) : null}
 
-      <LoadingAnimBlock
-        isVisible={[TaskStatus.queued, TaskStatus.processing].includes(
+      <div className={styles_loading_anim.loader_container}>
+        {[TaskStatus.queued, TaskStatus.processing].includes(
           processStatus as TaskStatus
+        ) ? (
+          <div className={styles_loading_anim.loader_roller}>
+            <p className={styles_loading_anim.status_text}>
+              Status: {processStatus}
+            </p>
+            <div className={styles_loading_anim.loader}></div>
+          </div>
+        ) : (
+          <button
+            className={styles_loading_anim.button}
+            onClick={handleGenerateVoice}
+            disabled={
+              !taskData.json_translated_subs_path ||
+              [TaskStatus.queued, TaskStatus.processing].includes(
+                processStatus as TaskStatus
+              ) ||
+              wrongSubsFormat
+            }
+          >
+            Generate voice
+          </button>
         )}
-      >
-        <button
-          className={styles.button}
-          onClick={handleGenerateVoice}
-          disabled={
-            !taskData.json_translated_subs_path ||
-            [TaskStatus.queued, TaskStatus.processing].includes(
-              processStatus as TaskStatus
-            ) ||
-            wrongSubsFormat
-          }
-        >
-          Generate voice
-        </button>
-      </LoadingAnimBlock>
+      </div>
     </div>
   );
 }
