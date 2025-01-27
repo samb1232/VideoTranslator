@@ -14,11 +14,13 @@ from pika.spec import Basic, BasicProperties
 logger = setup_logging()
 
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
 
 class RabbitMQSubsGenWorker(RabbitMQBase):
     def __init__(self):
-        super().__init__(rabbitmq_host=RABBITMQ_HOST)
+        super().__init__(rabbitmq_host=RABBITMQ_HOST, username=RABBITMQ_USER, password=RABBITMQ_PASSWORD)
         self.channel.queue_declare(queue=config.RABBITMQ_RESULTS_QUEUE, durable=True)
         self.channel.queue_declare(queue=config.RABBITMQ_SUBS_GEN_QUEUE, durable=True)
         logger.info("RabbitMQ subs gen worker connected")

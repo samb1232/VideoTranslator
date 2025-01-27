@@ -14,10 +14,13 @@ logger = setup_logging()
 
 db_operations: DbHelper = DbHelper()
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
+
 
 class RabbitMQProducer(RabbitMQBase):
     def __init__(self):
-        super().__init__(rabbitmq_host=RABBITMQ_HOST)
+        super().__init__(rabbitmq_host=RABBITMQ_HOST, username=RABBITMQ_USER, password=RABBITMQ_PASSWORD)
         self.channel.queue_declare(queue=ConfigWeb.RABBITMQ_SUBS_GEN_QUEUE, durable=True)
         self.channel.queue_declare(queue=ConfigWeb.RABBITMQ_VOICE_GEN_QUEUE, durable=True)
 
@@ -58,7 +61,7 @@ class RabbitMQProducer(RabbitMQBase):
         
 class RabbitMQConsumer(RabbitMQBase):
     def __init__(self):
-        super().__init__(rabbitmq_host=RABBITMQ_HOST)
+        super().__init__(rabbitmq_host=RABBITMQ_HOST, username=RABBITMQ_USER, password=RABBITMQ_PASSWORD)
         self.channel.queue_declare(queue=ConfigWeb.RABBITMQ_RESULTS_QUEUE, durable=True)
         logger.info("RabbitMQ results channel connected")
         
