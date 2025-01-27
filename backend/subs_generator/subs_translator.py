@@ -43,8 +43,7 @@ class SubsTranslator:
         subs_arr = parse_srt_to_subtitles(input_file_path)
         subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
         export_subtitles_to_srt_file(subs_translated_arr, output_file_path)
-
-        logger.debug("New file: ", output_file_path)
+        logger.debug("New file: " + output_file_path)
 
     def translate_json_file(self, input_file_path: str, output_file_path: str):
         """
@@ -53,8 +52,7 @@ class SubsTranslator:
         subs_arr = parse_json_to_subtitles(input_file_path)
         subs_translated_arr = self._translate_subtitles(subs_arr, self.TRANSLATION_LIMIT, self.end_line_separator)
         export_subtitles_to_json_file(subs_translated_arr, output_file_path)
-
-        logger.debug("New file: ", output_file_path)
+        logger.debug("New file: " + output_file_path)
 
     def _parse_text_to_arr(self, text: str):
         final_arr = text.split("\n\n")
@@ -84,7 +82,6 @@ class SubsTranslator:
                 is_last and len(text_translatable) > 0):
                 translated_text = self.translator.translate(text_translatable).replace(end_line_separator, "")
                 translated_arr = self._parse_text_to_arr(translated_text)
-
                 translated_arr_expected_len = sub_index - translated_subs_counter
                 if len(translated_arr) != translated_arr_expected_len:
                     logger.warning(f"WARNING: incorrect translation: translated_arr len is {len(translated_arr)}, but should be {translated_arr_expected_len}")
@@ -104,7 +101,5 @@ class SubsTranslator:
                 translated_subs_counter = sub_index
                 if not is_last:
                     time.sleep(5)
-
             text_translatable += sub_text + end_line_separator + "\n\n"
-
         return subs_translated_arr

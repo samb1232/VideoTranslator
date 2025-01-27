@@ -58,6 +58,7 @@ class RabbitMQSubsGenWorker(RabbitMQBase):
             op_status=TaskStatus.PROCESSING
         )
         
+        logger.debug(f"Sending task {task_item.task_id} to res queue with status {return_message.op_status.name}")  
         self._publish_message(queue=config.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
         
         try:
@@ -70,7 +71,6 @@ class RabbitMQSubsGenWorker(RabbitMQBase):
             return_message.op_status = TaskStatus.ERROR
         
         logger.debug(f"Sending task {task_item.task_id} to res queue with status {return_message.op_status.name}")    
-        
         self._publish_message(queue=config.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
         ch.basic_ack(delivery_tag=method.delivery_tag)
     
