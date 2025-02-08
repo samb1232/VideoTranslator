@@ -5,11 +5,10 @@ import os
 from unittest.mock import patch, MagicMock
 from database.models import Task, User
 from database.db_helper import DbHelper
-from shared_utils.task_status_enum import TaskStatus
 import shutil
 
 
-class TestDatabase(unittest.TestCase):
+class TestDatabaseHelper(unittest.TestCase):
     TEMP_DIR = "temp"
 
     @patch('database.db_helper.create_engine')
@@ -286,85 +285,3 @@ class TestDatabase(unittest.TestCase):
         self.mock_session.close.assert_called_once()
         self.assertFalse(is_sucess)
         
-
-    # def test_set_task_subs_generation_status(self):
-    #     new_task = self.create_test_task()
-    #     new_subs_gen_status = TaskStatus.PROCESSING
-    #     self.db_helper.set_task_subs_generation_status(new_task.id, new_subs_gen_status)
-        
-    #     task_with_new_status = self.db_helper.get_task_by_id(new_task.id)
-        
-    #     self.assertEqual(task_with_new_status.subs_generation_status, new_subs_gen_status.value)
-
-    # def test_set_task_voice_generation_status(self):
-    #     new_task = self.create_test_task()
-    #     new_voice_gen_status = TaskStatus.PROCESSING
-    #     self.db_helper.set_task_voice_generation_status(new_task.id, new_voice_gen_status)
-        
-    #     task_with_new_status = self.db_helper.get_task_by_id(new_task.id)
-    #     self.assertEqual(task_with_new_status.subs_generation_status, new_voice_gen_status.value)
-
-    # def test_set_task_languages(self):
-    #     new_task = self.create_test_task()
-    #     lang_from = "en"
-    #     lang_to = "es"
-
-    #     self.db_helper.set_task_languages(new_task.id, lang_from, lang_to)
-        
-    #     task_with_new_langs = self.db_helper.get_task_by_id(new_task.id)
-    #     self.assertEqual(task_with_new_langs.lang_from, lang_from)
-    #     self.assertEqual(task_with_new_langs.lang_to, lang_to)
-
-    # def test_set_task_src_vid_path(self):
-    #     new_task = self.create_test_task()
-    #     src_vid_path = "temp/test_video.mp4"
-    #     self.db_helper.set_task_src_vid_path(new_task.id, src_vid_path)
-        
-    #     task_with_new_vid_path = self.db_helper.get_task_by_id(new_task.id)
-    #     self.assertEqual(task_with_new_vid_path.src_vid_path, src_vid_path)
-
-    # def test_update_task_after_subs_generated(self):
-    #     new_task = self.create_test_task()
-    #     src_audio_path = "temp/test_audio.mp3"
-    #     srt_orig_subs_path = "temp/orig_subs_test.srt"
-    #     srt_translated_subs_path = "temp/translated_subs_test.srt"
-    #     json_translated_subs_path = "temp/translated_subs.json"
-        
-    #     self.db_helper.update_task_after_subs_generated(
-    #         task_id=new_task.id, 
-    #         src_audio_path=src_audio_path, 
-    #         srt_orig_subs_path=srt_orig_subs_path,
-    #         srt_translated_subs_path = srt_translated_subs_path,
-    #         json_translated_subs_path = json_translated_subs_path
-    #         )
-        
-    #     task_updated = self.db_helper.get_task_by_id(new_task.id)
-    #     self.assertEqual(task_updated.src_audio_path, src_audio_path)
-    #     self.assertEqual(task_updated.srt_orig_subs_path, srt_orig_subs_path)
-    #     self.assertEqual(task_updated.srt_translated_subs_path, srt_translated_subs_path)
-    #     self.assertEqual(task_updated.json_translated_subs_path, json_translated_subs_path)
-    
-    # def test_update_task_after_voice_generated(self):
-    #     new_task = self.create_test_task()
-    #     translated_audio_path = "temp/translated_audio_test.mp3"
-    #     translated_video_path = "temp/translated_video_test.mp4"
-        
-    #     self.db_helper.update_task_after_voice_generated(
-    #         task_id=new_task.id, 
-    #         translated_audio_path=translated_audio_path, 
-    #         translated_video_path=translated_video_path,
-    #         )
-        
-    #     task_updated = self.db_helper.get_task_by_id(new_task.id)
-    #     self.assertEqual(task_updated.translated_audio_path, translated_audio_path)
-    #     self.assertEqual(task_updated.translated_video_path, translated_video_path)
-    
-    # def test_reset_all_tasks_status(self):
-    #     new_task = self.create_test_task()
-    #     self.db_helper.set_task_subs_generation_status(new_task.id, TaskStatus.PROCESSING)
-    #     self.db_helper.set_task_voice_generation_status(new_task.id, TaskStatus.QUEUED)
-
-    #     task_updated = self.db_helper.get_task_by_id(new_task.id)
-
-    #     self.assertEqual(task_updated.subs_generation_status, TaskStatus.IDLE.value)
-    #     self.assertEqual(task_updated.voice_generation_status, TaskStatus.IDLE.value)
