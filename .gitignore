@@ -253,9 +253,12 @@ packages/react-devtools-timeline/dist
 *.mp3
 
 test_files
-config.py
 
 uploads
 users.json
 
 model.pth
+
+test_uploads/
+
+flask_session/
