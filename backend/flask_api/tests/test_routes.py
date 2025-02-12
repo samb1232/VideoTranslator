@@ -1,11 +1,10 @@
 from datetime import datetime
-from io import BytesIO
 import json
 import os
 import shutil
 import unittest
 from unittest.mock import MagicMock, patch
-from shared_utils.queue_tasks import SubsGenQueueItem
+from shared_utils.queue_tasks import VoiceGenQueueItem
 from database.models import Task, User
 from routes import create_blueprint
 from flask import Flask
@@ -16,7 +15,8 @@ class TestRoutes(unittest.TestCase):
     @patch('database.db_helper.DbHelper')
     @patch('rabbitmq_workers.RabbitMQConsumer')
     @patch('rabbitmq_workers.RabbitMQProducer')
-    def setUp(self, mock_db_helper, mock_rmq_consumer, mock_rmq_producer):
+    @patch('logging_conf.setup_logging')
+    def setUp(self, mock_db_helper, mock_rmq_consumer, mock_rmq_producer, mock_logger):
         self.mock_db_helper = mock_db_helper.return_value
         self.mock_rmq_consumer = mock_rmq_consumer
         self.mock_rmq_producer = mock_rmq_producer
@@ -33,11 +33,16 @@ class TestRoutes(unittest.TestCase):
         
         self.upload_folder = self.app.config["UPLOAD_FOLDER"]
         os.makedirs(self.upload_folder)
+        self.flask_session_folder = "flask_session"
+        
+        mock_logger.return_value = MagicMock()
         
 
     def tearDown(self):
         if os.path.exists(self.upload_folder):
             shutil.rmtree(self.upload_folder)
+        if os.path.exists(self.flask_session_folder):
+            shutil.rmtree(self.flask_session_folder)
         
         
     def test_get_current_user_success(self):
@@ -221,10 +226,10 @@ class TestRoutes(unittest.TestCase):
     
     
     def test_create_task_success(self):
-        test_task = Task(id="new_task_id", number_id=1, title="new_task_title")
+        test_task = Task(id="new_task_id", number_id=1, title="TEST_task_title")
         self.mock_db_helper.create_new_task.return_value = test_task
         response = self.client.post("/create_task", json={
-            'title': 'new_task_title',
+            'title': 'TEST_task_title',
             'creator_username': 'test_user'
         })
         response_data = response.get_json()
@@ -237,7 +242,7 @@ class TestRoutes(unittest.TestCase):
 
     def test_create_task_missing_fields(self):
         response = self.client.post("/create_task", json={
-            'title': 'new_task_title'
+            'title': 'TEST_task_title'
             # Missing 'creator_username'
         })
         self.assertEqual(response.status_code, 400)
@@ -432,3 +437,62 @@ class TestRoutes(unittest.TestCase):
         response_data = response.get_json()
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response_data['status'], 'error')
+
+
+    def test_generate_voice_success(self):
+        src_audio_path_test = os.path.join(self.upload_folder, "src_audio.mp3")
+        src_vid_path_test = os.path.join(self.upload_folder, "src_vid_.mp4")
+        json_translated_subs_path_test = os.path.join(self.upload_folder, "json_translated.json")
+        
+        with open(src_audio_path_test, "wb") as file:
+            file.write(b"audio file")
+        with open(src_vid_path_test, "wb") as file:
+            file.write(b"video file")
+        with open(json_translated_subs_path_test, "w") as file:
+            file.write("json subs")
+        
+        task = Task(
+            id="test_id_1", 
+            number_id=1, 
+            title="test_title_1", 
+            src_audio_path=src_audio_path_test, 
+            src_vid_path=src_vid_path_test, 
+            json_translated_subs_path=json_translated_subs_path_test,
+            lang_to="en"
+            )
+        self.mock_db_helper.get_task_by_id.return_value = task
+        response = self.client.post("/generate_voice/test_id_1")
+        voice_task_item = VoiceGenQueueItem(
+                task_id=task.id,
+                src_audio_path=task.src_audio_path,
+                src_video_path=task.src_vid_path,
+                json_subs_path=task.json_translated_subs_path,
+                lang_to=task.lang_to
+                )
+        self.assertEqual(response.status_code, 202)
+        self.mock_rmq_producer.add_task_to_voice_gen_queue.assert_called_once_with(voice_task_item)
+
+
+    def test_generate_voice_task_not_found(self):
+        self.mock_db_helper.get_task_by_id.return_value = None
+        response = self.client.post("/generate_voice/test_id_1")
+        self.assertEqual(response.status_code, 404)
+        self.mock_rmq_producer.add_task_to_voice_gen_queue.assert_not_called()
+        
+        
+    def test_generate_voice_files_not_found(self):
+        task = Task(
+            id="test_id_1", 
+            number_id=1, 
+            title="test_title_1", 
+            src_audio_path="NOT_EXISTNIG_PATH", 
+            src_vid_path="NOT_EXISTNIG_PATH", 
+            json_translated_subs_path="NOT_EXISTNIG_PATH",
+            lang_to="en"
+            )
+        self.mock_db_helper.get_task_by_id.return_value = task
+        response = self.client.post("/generate_voice/test_id_1")
+        self.assertEqual(response.status_code, 404)
+        self.mock_rmq_producer.add_task_to_voice_gen_queue.assert_not_called()
+
+    
