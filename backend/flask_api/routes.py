@@ -213,9 +213,14 @@ def create_blueprint(
                 return jsonify({'status': 'error', 'message': 'Task not found'}), 404
 
             subs_path = task.json_translated_subs_path
-            if not subs_path:
-                return jsonify({'status': 'error', 'message': 'No subs path for this task'}), 404
+            audio_path = task.src_audio_path
+            video_path = task.src_vid_path
+            if not subs_path or not audio_path or not video_path:
+                return jsonify({'status': 'error', 'message': 'Subs path, audio_path or video_path is not stated'}), 404
 
+            if not os.path.exists(subs_path) or not os.path.exists(audio_path) or not os.path.exists(video_path):
+                return jsonify({'status': 'error', 'message': 'Subs path, audio_path or video_path is not found on server. Please reload them'}), 404
+            
             voice_task_item = VoiceGenQueueItem(
                 task_id=task_id,
                 src_audio_path=task.src_audio_path,
