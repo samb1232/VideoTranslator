@@ -26,9 +26,9 @@ class SubsTranslator:
         self.target_lang = target_lang
         self.end_line_separator = end_line_separator
 
-        if translator == 'google':
+        if translator == Translators.google:
             self.translator = GoogleTranslator(source=self.source_lang, target=self.target_lang)
-        elif translator == 'yandex':
+        elif translator == Translators.yandex:
             self.translator = MyYandexTranslator(
                 api_key=config.YA_TRANSLATE_API_KEY, 
                 folder_id=config.YA_TRANSLATE_FOLDER_ID,
@@ -56,13 +56,15 @@ class SubsTranslator:
 
     def _parse_text_to_arr(self, text: str):
         final_arr = text.split("\n\n")
-        return final_arr[:-1]
+        if final_arr[-1].strip() == "":
+            final_arr = final_arr[:-1]
+        return final_arr
 
-    def _translate_subtitles(self, subtitles: List[Subtitle], translation_limit: int, end_line_separator: str):
+    def _translate_subtitles(self, subtitles: List[Subtitle], translation_limit: int, end_line_separator: str) -> List[Subtitle]:
         """
         Translate a list of subtitles from original language to desired language.
 
-        :param subs_arr: List of subtitle objects to translate.
+        :param subtitles: List of subtitle objects to translate.
         :param translation_limit: Maximum length of text to translate at once.
         :param end_line_separator: Separator to use between subtitles.
         :return: List of translated subtitle objects.
