@@ -94,7 +94,7 @@ class RabbitMQSubsGenWorker(RabbitMQBase):
         audio_filepath = subs_generator.get_audio_out_filepath()
 
         subs_translator = SubsTranslator(
-            translator=Translators.yandex,
+            translator=Translators.google,
             source_lang=task.lang_from,
             target_lang=task.lang_to
             )
