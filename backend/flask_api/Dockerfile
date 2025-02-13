@@ -8,7 +8,7 @@ RUN pip install -r requirements.txt
 
 COPY ./shared_utils ./shared_utils
 COPY ./database ./database
-COPY ./config.py ./app.py ./routes.py ./rabbitmq_workers.py ./logging_conf.py ./users.json ./wait-for-it.sh ./
+COPY ./config_web.py ./config_rabbitmq.py ./app.py ./routes.py ./rabbitmq_workers.py ./logging_conf.py ./users.json ./wait-for-it.sh ./
 
 EXPOSE 5000
 
