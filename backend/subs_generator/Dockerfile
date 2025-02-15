@@ -12,7 +12,7 @@ RUN pip install -r requirements.txt
 
 COPY ./shared_utils ./shared_utils
 COPY ./utils ./utils
-COPY ./config.py ./rabbitmq_subs_gen_worker.py ./subs_generator.py ./subs_translator.py ./logging_conf.py ./wait-for-it.sh ./
+COPY ./.env ./config_rabbitmq.py ./rabbitmq_subs_gen_worker.py ./subs_generator.py ./subs_translator.py ./logging_conf.py ./wait-for-it.sh ./
 
 
 CMD ["./wait-for-it.sh", "rabbitmq:5672", "--", "python", "rabbitmq_subs_gen_worker.py"] 

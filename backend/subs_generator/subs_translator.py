@@ -1,8 +1,9 @@
+import os
 import time
 from typing import List
 from deep_translator import GoogleTranslator
+import dotenv
 
-import config
 from shared_utils.sub_parser import Subtitle, export_subtitles_to_json_file, export_subtitles_to_srt_file, parse_json_to_subtitles, parse_srt_to_subtitles
 from utils.my_yandex_translator import MyYandexTranslator
 
@@ -21,6 +22,7 @@ class SubsTranslator:
     TRANSLATION_LIMIT = 5000
 
     def __init__(self, translator: Translators, source_lang: str, target_lang: str, end_line_separator: str=" //") -> None:
+        dotenv.load_dotenv()
         self.translator = translator
         self.source_lang = source_lang
         self.target_lang = target_lang
@@ -30,8 +32,8 @@ class SubsTranslator:
             self.translator = GoogleTranslator(source=self.source_lang, target=self.target_lang)
         elif translator == Translators.yandex:
             self.translator = MyYandexTranslator(
-                api_key=config.YA_TRANSLATE_API_KEY, 
-                folder_id=config.YA_TRANSLATE_FOLDER_ID,
+                api_key=os.getenv("ya_translate_api_key"), 
+                folder_id=os.getenv("ya_translate_folder_id"),
                 src_lang=self.source_lang,
                 dest_lang=self.target_lang
                 )
