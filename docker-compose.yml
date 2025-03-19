@@ -6,7 +6,7 @@ services:
     build:
       context: ./backend/flask_api
     ports:
-      - "127.0.0.1:5000:5000"
+      - "127.0.0.1:5050:5050"
     environment:
       FLASK_ENV: development
       DATABASE_URL: mysql+pymysql://user123:U4yfJPqa@db:3306/flask_db
