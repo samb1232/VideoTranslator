@@ -20,32 +20,7 @@
     height: 50px; 
   }
 
-  .button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-    width: 100%;
-  }
-  
-  .button:hover {
-    background-color: #0056b3;
-  }
-  
-  .button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-
   .loader_roller {
     display: flex;
     flex-direction: column;
-  }
-
-  .status_text {
-    font-size: 18px;
   }
