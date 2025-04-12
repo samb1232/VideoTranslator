@@ -79,9 +79,6 @@ class RabbitMQConsumer(RabbitMQBase):
                     logger.error(f"Error while consuming results queue: {e}")
                     self._reconnect()
                     
-    def _reconnect(self):
-        super()._reconnect()
-        self.watch_results_queue()
 
     def _callback(self, ch: BlockingChannel, method: Basic.Deliver, properties: BasicProperties, body: str | bytes):
         res_item = ResultsQueueItem.from_json(body)
