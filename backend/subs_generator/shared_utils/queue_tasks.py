@@ -24,6 +24,15 @@ class SubsGenQueueItem:
         json_dict = json.loads(json_str)
         return SubsGenQueueItem(**json_dict)
 
+    def __eq__(self, other):
+        if isinstance(other, SubsGenQueueItem):
+            return (self.task_id == other.task_id and
+                    self.vid_filepath == other.vid_filepath and
+                    self.lang_from == other.lang_from and
+                    self.lang_to == other.lang_to
+                    )
+        return False
+    
 
 class SubsGenResultsItem:
     def __init__(self, src_audio_path: str, srt_orig_subs_path: str, srt_translated_subs_path: str, json_translated_subs_path: str):
@@ -40,7 +49,16 @@ class SubsGenResultsItem:
         json_dict = json.loads(json_str)
         return SubsGenResultsItem(**json_dict)
 
+    def __eq__(self, other):
+        if isinstance(other, SubsGenResultsItem):
+            return (self.src_audio_path == other.src_audio_path and
+                    self.srt_orig_subs_path == other.srt_orig_subs_path and
+                    self.srt_translated_subs_path == other.srt_translated_subs_path and
+                    self.json_translated_subs_path == other.json_translated_subs_path
+                    )
+        return False
 
+    
 class VoiceGenQueueItem:
     def __init__(self, task_id: str, src_audio_path: str, src_video_path: str, json_subs_path: str, lang_to: str):
         self.task_id = task_id
@@ -56,6 +74,15 @@ class VoiceGenQueueItem:
     def from_json(json_str: str):
         json_dict = json.loads(json_str)
         return VoiceGenQueueItem(**json_dict)
+    
+    def __eq__(self, other):
+        if isinstance(other, VoiceGenQueueItem):
+            return (self.task_id == other.task_id and
+                    self.src_audio_path == other.src_audio_path and
+                    self.src_video_path == other.src_video_path and
+                    self.json_subs_path == other.json_subs_path and
+                    self.lang_to == other.lang_to)
+        return False
  
  
 class VoiceGenResultsItem:
@@ -70,6 +97,13 @@ class VoiceGenResultsItem:
     def from_json(json_str: str):
         json_dict = json.loads(json_str)
         return VoiceGenResultsItem(**json_dict)
+    
+    def __eq__(self, other):
+        if isinstance(other, VoiceGenResultsItem):
+            return (self.translated_audio_path == other.translated_audio_path and
+                    self.translated_video_path == other.translated_video_path
+                    )
+        return False
     
 
 class ResultsQueueItem: 
@@ -113,3 +147,12 @@ class ResultsQueueItem:
         
         return ResultsQueueItem(task_id, op_type, op_status, results)
         
+    def __eq__(self, other):
+        if isinstance(other, ResultsQueueItem):
+            return (self.task_id == other.task_id and
+                    self.op_type == other.op_type and
+                    self.op_type == other.op_type and
+                    self.op_status == other.op_status and
+                    self.results == other.results
+                    )
+        return False

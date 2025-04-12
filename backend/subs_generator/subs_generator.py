@@ -1,6 +1,5 @@
 import os
-
-from config import AAI_API_KEY
+import dotenv
 import assemblyai as aai
 
 from utils.audio_worker import extract_audio_from_video
@@ -12,7 +11,8 @@ class SubsGenerator:
     """Module for generating subtitles in original language"""
 
     def __init__(self, src_lang: str, num_of_speakers: int = None) -> None:
-        aai.settings.api_key = AAI_API_KEY
+        dotenv.load_dotenv()
+        aai.settings.api_key = os.getenv("aai_api_key")
         self.src_lang = src_lang
         self.aai_conf = aai.TranscriptionConfig(
             language_code=src_lang, 
@@ -38,7 +38,6 @@ class SubsGenerator:
 
         self.srt_out_filepath = os.path.join(output_dir, f"{out_filename}_src.srt")
         self._save_subtitles_to_srt(transcript, self.srt_out_filepath)
-
         self.json_out_filepath = os.path.join(output_dir,  f"{out_filename}_src.json")
         self._save_subtitles_to_json(transcript, self.json_out_filepath)
         
@@ -53,11 +52,14 @@ class SubsGenerator:
         subtitles = sub_splitter.split_utterances_to_subtitles(transcript.utterances)
         export_subtitles_to_json_file(subtitles, json_filepath)
         
+        
     def get_audio_out_filepath(self):
         return self.audio_file_path
     
+    
     def get_json_out_filepath(self):
         return self.json_out_filepath
+    
     
     def get_srt_out_filepath(self):
         return self.srt_out_filepath

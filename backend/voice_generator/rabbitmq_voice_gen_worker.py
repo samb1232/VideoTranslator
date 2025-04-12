@@ -1,6 +1,6 @@
 import os
 import pika
-import config
+from config_rabbitmq import ConfigRabbitMQ
 from shared_utils.rabbitmq_base import RabbitMQBase
 from shared_utils.task_status_enum import TaskStatus
 from shared_utils.file_utils import get_task_folder
@@ -14,20 +14,22 @@ from pika.spec import Basic, BasicProperties
 logger = setup_logging()
 
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
 
 class RabbitMQVoiceGenWorker(RabbitMQBase):
     def __init__(self):
         self.voice_generator = VoiceGenerator()
-        super().__init__(rabbitmq_host=RABBITMQ_HOST)
-        self.channel.queue_declare(queue=config.RABBITMQ_RESULTS_QUEUE, durable=True)
-        self.channel.queue_declare(queue=config.RABBITMQ_VOICE_GEN_QUEUE, durable=True)
+        super().__init__(rabbitmq_host=RABBITMQ_HOST, username=RABBITMQ_USER, password=RABBITMQ_PASSWORD)
+        self.channel.queue_declare(queue=ConfigRabbitMQ.RABBITMQ_RESULTS_QUEUE, durable=True)
+        self.channel.queue_declare(queue=ConfigRabbitMQ.RABBITMQ_VOICE_GEN_QUEUE, durable=True)
         logger.info("RabbitMQ voice gen worker connected")
         
     def watch_voice_gen_queue(self):
         while True:
             try:
-                self.channel.basic_consume(queue=config.RABBITMQ_VOICE_GEN_QUEUE, on_message_callback=self._callback)
+                self.channel.basic_consume(queue=ConfigRabbitMQ.RABBITMQ_VOICE_GEN_QUEUE, on_message_callback=self._callback)
                 logger.info('Starting to voice_gen queue')
                 self.channel.start_consuming()
             except Exception as e:
@@ -56,7 +58,9 @@ class RabbitMQVoiceGenWorker(RabbitMQBase):
             op_status=TaskStatus.PROCESSING
         )
         
-        self._publish_message(queue=config.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
+        logger.debug(f"Sending task {task_item.task_id} to res queue with status {return_message.op_status.name}")   
+        self._publish_message(queue=ConfigRabbitMQ.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
+        logger.debug(f"Task sent to queue")   
         
         try:
             result = self._generate_voice(task_item)
@@ -68,8 +72,8 @@ class RabbitMQVoiceGenWorker(RabbitMQBase):
             return_message.op_status = TaskStatus.ERROR
         
         logger.debug(f"Sending task {task_item.task_id} to res queue with status {return_message.op_status.name}")    
-        
-        self._publish_message(queue=config.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
+        self._publish_message(queue=ConfigRabbitMQ.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
+        logger.debug(f"Task sent to queue")   
         ch.basic_ack(delivery_tag=method.delivery_tag)
     
     def _generate_voice(self, task: VoiceGenQueueItem) -> VoiceGenResultsItem:

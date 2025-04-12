@@ -7,27 +7,29 @@ from subs_translator import SubsTranslator, Translators
 from subs_generator import SubsGenerator
 from shared_utils.file_utils import get_task_folder
 from shared_utils.queue_tasks import RabbitMqOperationTypes, ResultsQueueItem, SubsGenQueueItem, SubsGenResultsItem
-import config
+from config_rabbitmq import ConfigRabbitMQ
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
 
 logger = setup_logging()
 
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
 
 class RabbitMQSubsGenWorker(RabbitMQBase):
     def __init__(self):
-        super().__init__(rabbitmq_host=RABBITMQ_HOST)
-        self.channel.queue_declare(queue=config.RABBITMQ_RESULTS_QUEUE, durable=True)
-        self.channel.queue_declare(queue=config.RABBITMQ_SUBS_GEN_QUEUE, durable=True)
+        super().__init__(rabbitmq_host=RABBITMQ_HOST, username=RABBITMQ_USER, password=RABBITMQ_PASSWORD)
+        self.channel.queue_declare(queue=ConfigRabbitMQ.RABBITMQ_RESULTS_QUEUE, durable=True)
+        self.channel.queue_declare(queue=ConfigRabbitMQ.RABBITMQ_SUBS_GEN_QUEUE, durable=True)
         logger.info("RabbitMQ subs gen worker connected")
         
 
     def watch_subs_gen_queue(self):
         while True:
             try:
-                self.channel.basic_consume(queue=config.RABBITMQ_SUBS_GEN_QUEUE, on_message_callback=self._callback)
+                self.channel.basic_consume(queue=ConfigRabbitMQ.RABBITMQ_SUBS_GEN_QUEUE, on_message_callback=self._callback)
                 logger.info('Starting to subs_gen queue')
                 self.channel.start_consuming()
             except Exception as e:
@@ -56,7 +58,8 @@ class RabbitMQSubsGenWorker(RabbitMQBase):
             op_status=TaskStatus.PROCESSING
         )
         
-        self._publish_message(queue=config.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
+        logger.debug(f"Sending task {task_item.task_id} to res queue with status {return_message.op_status.name}")  
+        self._publish_message(queue=ConfigRabbitMQ.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
         
         try:
             result = self._generate_subs(task_item)
@@ -68,8 +71,7 @@ class RabbitMQSubsGenWorker(RabbitMQBase):
             return_message.op_status = TaskStatus.ERROR
         
         logger.debug(f"Sending task {task_item.task_id} to res queue with status {return_message.op_status.name}")    
-        
-        self._publish_message(queue=config.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
+        self._publish_message(queue=ConfigRabbitMQ.RABBITMQ_RESULTS_QUEUE, body_json=return_message.to_json())
         ch.basic_ack(delivery_tag=method.delivery_tag)
     
     @staticmethod
@@ -92,7 +94,7 @@ class RabbitMQSubsGenWorker(RabbitMQBase):
         audio_filepath = subs_generator.get_audio_out_filepath()
 
         subs_translator = SubsTranslator(
-            translator=Translators.yandex,
+            translator=Translators.google,
             source_lang=task.lang_from,
             target_lang=task.lang_to
             )

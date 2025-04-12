@@ -3,23 +3,28 @@ import pika
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
 from pika.exceptions import StreamLostError
+from config_rabbitmq import ConfigRabbitMQ
 from shared_utils.rabbitmq_base import RabbitMQBase
 from logging_conf import setup_logging
 from database.db_helper import DbHelper
 from shared_utils.task_status_enum import TaskStatus
 from shared_utils.queue_tasks import RabbitMqOperationTypes, ResultsQueueItem, SubsGenQueueItem, SubsGenResultsItem, VoiceGenQueueItem, VoiceGenResultsItem
-from config import ConfigWeb
+
 
 logger = setup_logging()
 
-db_operations: DbHelper = DbHelper()
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
+
 
 class RabbitMQProducer(RabbitMQBase):
     def __init__(self):
-        super().__init__(rabbitmq_host=RABBITMQ_HOST)
-        self.channel.queue_declare(queue=ConfigWeb.RABBITMQ_SUBS_GEN_QUEUE, durable=True)
-        self.channel.queue_declare(queue=ConfigWeb.RABBITMQ_VOICE_GEN_QUEUE, durable=True)
+        super().__init__(rabbitmq_host=RABBITMQ_HOST, username=RABBITMQ_USER, password=RABBITMQ_PASSWORD)
+        self.channel.queue_declare(queue=ConfigRabbitMQ.RABBITMQ_SUBS_GEN_QUEUE, durable=True)
+        self.channel.queue_declare(queue=ConfigRabbitMQ.RABBITMQ_VOICE_GEN_QUEUE, durable=True)
+        
+        self.db_helper: DbHelper = DbHelper()
 
     def _publish_message(self, queue: str, body_json: str):
         self.channel.basic_publish(
@@ -31,9 +36,9 @@ class RabbitMQProducer(RabbitMQBase):
 
     def add_task_to_subs_gen_queue(self, task: SubsGenQueueItem):
         try:
-            queue = ConfigWeb.RABBITMQ_SUBS_GEN_QUEUE
+            queue = ConfigRabbitMQ.RABBITMQ_SUBS_GEN_QUEUE
             self._publish_message(queue=queue, body_json=task.to_json())
-            db_operations.set_task_subs_generation_status(task_id=task.task_id, status=TaskStatus.QUEUED)
+            self.db_helper.set_task_subs_generation_status(task_id=task.task_id, status=TaskStatus.QUEUED)
             logger.debug(f"Task {task.task_id} added to {queue} queue")
         except StreamLostError as e:
             logger.error(f"Error adding task to {queue} queue: {e}")
@@ -44,9 +49,9 @@ class RabbitMQProducer(RabbitMQBase):
 
     def add_task_to_voice_gen_queue(self, task: VoiceGenQueueItem):
         try:
-            queue = ConfigWeb.RABBITMQ_VOICE_GEN_QUEUE
+            queue = ConfigRabbitMQ.RABBITMQ_VOICE_GEN_QUEUE
             self._publish_message(queue=queue, body_json=task.to_json())
-            db_operations.set_task_voice_generation_status(task_id=task.task_id, status=TaskStatus.QUEUED)
+            self.db_helper.set_task_voice_generation_status(task_id=task.task_id, status=TaskStatus.QUEUED)
             logger.debug(f"Task {task.task_id} added to {queue} queue")
         except StreamLostError as e:
             logger.error(f"Error adding task to {queue} queue: {e}")
@@ -58,23 +63,22 @@ class RabbitMQProducer(RabbitMQBase):
         
 class RabbitMQConsumer(RabbitMQBase):
     def __init__(self):
-        super().__init__(rabbitmq_host=RABBITMQ_HOST)
-        self.channel.queue_declare(queue=ConfigWeb.RABBITMQ_RESULTS_QUEUE, durable=True)
+        super().__init__(rabbitmq_host=RABBITMQ_HOST, username=RABBITMQ_USER, password=RABBITMQ_PASSWORD)
+        self.channel.queue_declare(queue=ConfigRabbitMQ.RABBITMQ_RESULTS_QUEUE, durable=True)
         logger.info("RabbitMQ results channel connected")
+        
+        self.db_helper: DbHelper = DbHelper()
         
     def watch_results_queue(self):
             while True:
                 try:
-                    self.channel.basic_consume(queue=ConfigWeb.RABBITMQ_RESULTS_QUEUE, on_message_callback=self._callback)
+                    self.channel.basic_consume(queue=ConfigRabbitMQ.RABBITMQ_RESULTS_QUEUE, on_message_callback=self._callback)
                     logger.info('Starting to listen results queue')
                     self.channel.start_consuming()
                 except Exception as e:
                     logger.error(f"Error while consuming results queue: {e}")
                     self._reconnect()
                     
-    def _reconnect(self):
-        super()._reconnect()
-        self.watch_results_queue()
 
     def _callback(self, ch: BlockingChannel, method: Basic.Deliver, properties: BasicProperties, body: str | bytes):
         res_item = ResultsQueueItem.from_json(body)
@@ -87,12 +91,12 @@ class RabbitMQConsumer(RabbitMQBase):
 
     def _update_task_status(self, res_item: ResultsQueueItem, new_status: TaskStatus):
         if res_item.op_type == RabbitMqOperationTypes.SUBS_GEN:
-            db_operations.set_task_subs_generation_status(
+            self.db_helper.set_task_subs_generation_status(
                 task_id=res_item.task_id,
                 status=new_status
             )
         else:
-            db_operations.set_task_voice_generation_status(
+            self.db_helper.set_task_voice_generation_status(
                 task_id=res_item.task_id,
                 status=new_status
             )
@@ -102,7 +106,7 @@ class RabbitMQConsumer(RabbitMQBase):
         results = res_item.results
         if res_item.op_type == RabbitMqOperationTypes.SUBS_GEN:
             assert type(results) == SubsGenResultsItem
-            db_operations.update_task_after_subs_generated(
+            self.db_helper.update_task_after_subs_generated(
                 task_id=res_item.task_id,
                 src_audio_path=results.src_audio_path,
                 srt_orig_subs_path=results.srt_orig_subs_path,
@@ -111,7 +115,7 @@ class RabbitMQConsumer(RabbitMQBase):
             )
         else:
             assert type(results) == VoiceGenResultsItem
-            db_operations.update_task_after_voice_generated(
+            self.db_helper.update_task_after_voice_generated(
                 task_id=res_item.task_id,
                 translated_audio_path=results.translated_audio_path,
                 translated_video_path=results.translated_video_path

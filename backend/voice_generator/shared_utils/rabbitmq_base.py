@@ -5,7 +5,9 @@ from pika.exceptions import StreamLostError
 
 
 class RabbitMQBase:
-    def __init__(self, rabbitmq_host):
+    def __init__(self, rabbitmq_host, username, password):
+        self.username = username
+        self.password = password
         self.rabbitmq_host = rabbitmq_host
         self._connect()
         threading.Thread(target=self._send_heartbeat, daemon=True).start()
@@ -14,6 +16,7 @@ class RabbitMQBase:
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=self.rabbitmq_host,
+                credentials=pika.PlainCredentials(self.username, self.password),
                 heartbeat=600
             )
         )

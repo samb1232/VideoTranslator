@@ -1,26 +1,30 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_session import Session
-from logging_conf import setup_logging
-from config import ConfigWeb
+from rabbitmq_workers import RabbitMQConsumer, RabbitMQProducer
+from config_web import ConfigWeb
 from database.db_helper import DbHelper
-from routes import bp
+from routes import create_blueprint
 
 
-logger = setup_logging()
+def create_app():
+    db_helper = DbHelper()
+    db_helper.add_users_from_json("users.json")
+    
+    rabbitmq_consumer = RabbitMQConsumer()
+    rabbitmq_client = RabbitMQProducer()
+    
+    app = Flask(__name__)
+    app.config.from_object(ConfigWeb)
+    bp = create_blueprint(db_helper, rabbitmq_consumer, rabbitmq_client)
+    app.register_blueprint(bp)
+    CORS(app, supports_credentials=True)
+    Session(app) # add server sided session
 
-db_operations = DbHelper()
+    return app
 
-app = Flask(__name__)
 
-app.config.from_object(ConfigWeb)
-app.register_blueprint(bp)
-
-CORS(app, supports_credentials=True)
-
-server_session = Session(app)
-
-db_operations.add_users_from_json("users.json")
+app = create_app()
 
 if __name__ == '__main__':
-    app.run(port=5000, host="0.0.0.0", debug=False)
+    app.run(port=5050, host="0.0.0.0", debug=False)
