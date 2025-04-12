@@ -112,7 +112,7 @@ export function VideoUploader({ taskData, fetchTaskFunc }: VideoUploaderProps) {
           </select>
         </label>
       </div>
-
+      <p>Status: {processStatus}</p>
       <LoadingAnimBlock
         isVisible={[TaskStatus.queued, TaskStatus.processing].includes(
           processStatus as TaskStatus
