@@ -6,15 +6,7 @@ import { TaskData, TaskStatus } from "../../../entities/task";
 import { SERVER_URL } from "../../../shared/const/serverUrl";
 import { LoadingAnimBlock } from "../../../entities/loadingAnimBlock";
 import { ErrorMessage } from "../../../entities/errorMessage";
-
-interface Subtitle {
-  id: number;
-  start: string;
-  end: string;
-  text: string;
-  speaker: string;
-  modified: boolean;
-}
+import { Subtitle, SubtitleBlock } from "../../../entities/subtitle";
 
 interface SubtitleEditorProps {
   taskData: TaskData;
@@ -158,62 +150,13 @@ export function SubtitleEditor({
       ) && (
         <div className={styles.subtitleList}>
           {subtitles.map((subtitle, index) => (
-            <div key={subtitle.id} className={styles.subtitleItem}>
-              <div className={styles.sub_id_div}>
-                {subtitle.id}{" "}
-                {subtitle.modified && (
-                  <span className={styles.modified}>*</span>
-                )}
-              </div>
-
-              <div className={styles.inputGroup}>
-                <div className={styles.speaker_div}>
-                  <i>Speaker:</i>
-                  <input
-                    type="text"
-                    value={subtitle.speaker}
-                    onChange={(e) =>
-                      handleInputChange(index, "speaker", e.target.value)
-                    }
-                    className={`${styles.inputGroup} ${styles.speaker} ${
-                      inputErrors[index]?.speaker ? styles.errorBorder : ""
-                    }`}
-                  />
-                </div>
-                <div className={styles.start_end_time_div}>
-                  <input
-                    type="text"
-                    value={subtitle.start}
-                    onChange={(e) =>
-                      handleInputChange(index, "start", e.target.value)
-                    }
-                    className={`${styles.inputGroup} ${
-                      inputErrors[index]?.start ? styles.errorBorder : ""
-                    }`}
-                  />
-                  <div>→</div>
-                  <input
-                    type="text"
-                    value={subtitle.end}
-                    onChange={(e) =>
-                      handleInputChange(index, "end", e.target.value)
-                    }
-                    className={`${styles.inputGroup} ${
-                      inputErrors[index]?.end ? styles.errorBorder : ""
-                    }`}
-                  />
-                </div>
-              </div>
-              <textarea
-                value={subtitle.text}
-                onChange={(e) =>
-                  handleInputChange(index, "text", e.target.value)
-                }
-                className={`${styles.textarea} ${
-                  inputErrors[index]?.text ? styles.errorBorder : ""
-                }`}
-              />
-            </div>
+            <SubtitleBlock
+              subtitle={subtitle}
+              fieldsErrorMap={inputErrors[index]}
+              inputChangeHandler={(fiedsErrorMap, value) =>
+                handleInputChange(index, fiedsErrorMap, value)
+              }
+            />
           ))}
         </div>
       )}

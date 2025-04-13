@@ -1,0 +1,73 @@
+  .subtitleItem {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .subtitleItem .inputGroup {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .subtitleItem .inputGroup input {
+    width: 100px;
+    margin-right: 10px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .subtitleItem .inputGroup input.speaker {
+    width: 50px;
+  }
+  
+  .subtitleItem textarea {
+    width: 90%;
+    min-height: 100px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+    resize: vertical; 
+  }
+
+  .speaker_div {
+    text-align: start;
+    font-size: small;
+  }
+
+  .sub_id_div {
+    display: flex;
+    align-self: start;
+    color: #424242;
+    margin: 0px 10px 10px 0px;
+  }
+
+  .start_end_time_div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .start_end_time_div div {
+    margin-bottom: 10px;
+  }
+  
+  .start_end_time_div input {
+    width: 80px;
+    margin: 0 5px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .errorBorder {
+    background-color: #ff2c4f;
+  }
